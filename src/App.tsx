@@ -19,6 +19,8 @@ import Messages from "./pages/Messages";
 import BookingDetails from "./pages/BookingDetails";
 import ClientProfile from "./pages/ClientProfile";
 import NotificationsPage from "./pages/Notifications";
+import Offers from "./pages/Offers";
+import OfferChat from "./pages/OfferChat";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -52,6 +54,8 @@ const App = () => (
               <Route path="/mensagens" element={<Messages />} />
               <Route path="/booking/:id" element={<BookingDetails />} />
               <Route path="/notificacoes" element={<NotificationsPage />} />
+              <Route path="/ofertas" element={<Offers />} />
+              <Route path="/oferta/:id" element={<OfferChat />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

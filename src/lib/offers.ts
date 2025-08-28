@@ -56,6 +56,21 @@ export const getOffers = async (userId: string) => {
   return data;
 };
 
+export const getOfferById = async (offerId: string) => {
+  const { data, error } = await supabase
+    .from('offers')
+    .select(`
+      *,
+      client:profiles!offers_client_id_fkey(full_name, email),
+      freelancer:profiles!offers_freelancer_id_fkey(full_name, phone)
+    `)
+    .eq('id', offerId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 export interface UpdateOfferStatusData {
   status: 'accepted' | 'rejected' | 'counter_offer';
   rejection_reason?: string;

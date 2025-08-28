@@ -38,7 +38,14 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/');
+      const userType = user.user_metadata?.user_type;
+      if (userType === 'freelancer') {
+        navigate('/profile');
+      } else if (userType === 'client') {
+        navigate('/search');
+      } else {
+        navigate('/');
+      }
     }
   }, [user, navigate]);
 
@@ -101,7 +108,7 @@ const Auth = () => {
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta"
         });
-        navigate('/');
+        // Navigation will be handled by the useEffect above based on user type
       }
     } catch (error) {
       toast({

@@ -1,17 +1,24 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Star, MapPin, Clock, DollarSign, Camera, MessageCircle, Heart } from 'lucide-react';
 import { useFreelancerProfile } from '@/hooks/useFreelancerProfile';
+import { useAuth } from '@/contexts/AuthContext';
 import { SPECIALTIES } from '@/lib/freelancer';
 import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
+import { OfferForm } from '@/components/OfferForm';
+import Header from '@/components/Header';
 
 const FreelancerPublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { profile, specialties, portfolioItems, loading, error } = useFreelancerProfile(id);
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Carregando perfil...</div>;
@@ -33,6 +40,7 @@ const FreelancerPublicProfile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Info */}
@@ -62,10 +70,38 @@ const FreelancerPublicProfile: React.FC = () => {
                   </div>
 
                   <div className="flex space-x-2 w-full">
-                    <Button className="flex-1">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Enviar Oferta
-                    </Button>
+                    {user && user.user_metadata?.user_type === 'client' ? (
+                      <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button className="flex-1">
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Enviar Oferta
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Enviar Oferta para {profile.profiles?.full_name}</DialogTitle>
+                          </DialogHeader>
+                          <OfferForm 
+                            freelancerId={id!} 
+                            onSuccess={() => setOfferDialogOpen(false)}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    ) : !user ? (
+                      <Button 
+                        className="flex-1" 
+                        onClick={() => navigate('/auth')}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Enviar Oferta
+                      </Button>
+                    ) : (
+                      <Button className="flex-1" disabled>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Apenas clientes podem enviar ofertas
+                      </Button>
+                    )}
                     <Button variant="outline" size="icon">
                       <Heart className="h-4 w-4" />
                     </Button>

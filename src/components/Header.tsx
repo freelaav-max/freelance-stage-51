@@ -7,12 +7,14 @@ import { Search, Menu, User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { unreadCount } = useRealtimeNotifications();
 
   const handleSignOut = async () => {
     await signOut();
@@ -80,6 +82,15 @@ const Header = () => {
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Perfil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/ofertas')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Minhas Ofertas</span>
+                    {unreadCount > 0 && (
+                      <Badge variant="destructive" className="ml-auto text-xs">
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/notificacoes')}>
                     <Settings className="mr-2 h-4 w-4" />
@@ -165,6 +176,15 @@ const Header = () => {
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Perfil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/ofertas')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Minhas Ofertas</span>
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto text-xs">
+                          {unreadCount}
+                        </Badge>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/notificacoes')}>
                       <Settings className="mr-2 h-4 w-4" />
