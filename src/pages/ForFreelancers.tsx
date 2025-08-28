@@ -297,7 +297,76 @@ const PricingSection: React.FC<{
     cta: "Assinar plano Premium",
     popular: false
   }];
-  return;
+  return (
+    <section ref={ref} className="py-20 bg-background">
+      <div className="container mx-auto px-4">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+        >
+          <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+            Planos
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Escolha o plano ideal para você
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Comece gratuitamente e evolua conforme seu negócio cresce
+          </p>
+        </motion.div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {plans.map((plan, index) => (
+            <motion.div
+              key={index}
+              className={`relative bg-background p-8 rounded-lg border ${
+                plan.popular ? 'border-primary shadow-lg' : 'border-border'
+              }`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-primary text-white">Mais Popular</Badge>
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+                <div className="mb-2">
+                  <span className="text-3xl font-bold">{plan.price}</span>
+                </div>
+                <p className="text-muted-foreground">{plan.description}</p>
+              </div>
+              
+              <ul className="space-y-3 mb-8">
+                {plan.features.map((feature, featureIndex) => (
+                  <li key={featureIndex} className="flex items-start">
+                    <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              
+              <Button
+                className={`w-full ${
+                  plan.popular
+                    ? 'bg-primary hover:bg-primary/90'
+                    : 'variant-outline'
+                }`}
+                onClick={() => navigate('/auth')}
+              >
+                {plan.cta}
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 };
 const FAQSection: React.FC = () => {
   const [ref, inView] = useInView({
