@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
-import { sendMessage, getMessages, NewMessageData, Message } from '@/lib/messages';
+import { sendMessage, getMessages, markMessageAsRead, NewMessageData, Message } from '@/lib/messages';
 import { Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -82,10 +82,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     sendMessageMutation.mutate(messageData);
   };
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change and mark received messages as read
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    
+    // Mark unread received messages as read
+    if (user && messages.length > 0) {
+      const unreadReceivedMessages = messages.filter((message: any) => 
+        message.receiver_id === user.id && !message.read_at
+      );
+      
+      unreadReceivedMessages.forEach((message: any) => {
+        markMessageAsRead(message.id).catch(console.error);
+      });
+      
+      if (unreadReceivedMessages.length > 0) {
+        // Invalidate messages query to refresh the data
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['messages', offerId] });
+        }, 1000);
+      }
+    }
+  }, [messages, user, offerId, queryClient]);
 
   if (isLoading) {
     return (

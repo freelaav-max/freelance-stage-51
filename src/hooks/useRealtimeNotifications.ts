@@ -47,7 +47,7 @@ export const useRealtimeNotifications = (): NotificationState => {
           const statusMap: Record<string, string> = {
             accepted: 'aceita',
             rejected: 'rejeitada',
-            counter_offer: 'recebeu uma contraproposta'
+            counter_proposed: 'recebeu uma contraproposta'
           };
           
           const statusText = statusMap[payload.new.status] || 'atualizada';

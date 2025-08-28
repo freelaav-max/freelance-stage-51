@@ -72,7 +72,7 @@ export const getOfferById = async (offerId: string) => {
 };
 
 export interface UpdateOfferStatusData {
-  status: 'accepted' | 'rejected' | 'counter_offer';
+  status: 'accepted' | 'rejected' | 'counter_proposed';
   rejection_reason?: string;
   counter_price?: number;
 }

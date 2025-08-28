@@ -68,7 +68,7 @@ export const OfferActions: React.FC<OfferActionsProps> = ({ offer, userType }) =
 
   const handleCounterOffer = (data: { counter_price: number }) => {
     updateStatusMutation.mutate({
-      status: 'counter_offer',
+      status: 'counter_proposed',
       counter_price: data.counter_price
     });
   };
@@ -80,111 +80,177 @@ export const OfferActions: React.FC<OfferActionsProps> = ({ offer, userType }) =
     });
   };
 
-  // Only show actions if the offer is pending and user is the freelancer
-  if (offer.status !== 'pending' || userType !== 'freelancer') {
+  // Show actions based on user type and offer status
+  if (userType === 'freelancer' && offer.status !== 'pending') {
     return null;
   }
+  
+  if (userType === 'client' && offer.status !== 'counter_proposed') {
+    return null;
+  }
+
+  const isUpdating = updateStatusMutation.isPending;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ações da Oferta</CardTitle>
+        <CardTitle>
+          {userType === 'freelancer' ? 'Ações da Oferta' : 'Responder Contraproposta'}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col space-y-3">
-          <Button 
-            onClick={handleAccept}
-            disabled={updateStatusMutation.isPending}
-            className="w-full"
-          >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            {updateStatusMutation.isPending ? 'Processando...' : 'Aceitar Oferta'}
-          </Button>
-
-          <Dialog open={isCounterOfferOpen} onOpenChange={setIsCounterOfferOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Fazer Contraproposta
+          {userType === 'freelancer' ? (
+            <>
+              <Button 
+                onClick={handleAccept}
+                disabled={isUpdating}
+                className="w-full"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {isUpdating ? 'Processando...' : 'Aceitar Oferta'}
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Fazer Contraproposta</DialogTitle>
-              </DialogHeader>
-              <Form {...counterOfferForm}>
-                <form onSubmit={counterOfferForm.handleSubmit(handleCounterOffer)} className="space-y-4">
-                  <FormField
-                    control={counterOfferForm.control}
-                    name="counter_price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Novo Valor (R$)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="Digite o novo valor"
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button 
-                    type="submit" 
-                    className="w-full"
-                    disabled={updateStatusMutation.isPending}
-                  >
-                    {updateStatusMutation.isPending ? 'Enviando...' : 'Enviar Contraproposta'}
-                  </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
 
-          <Dialog open={isRejectionOpen} onOpenChange={setIsRejectionOpen}>
-            <DialogTrigger asChild>
-              <Button variant="destructive" className="w-full">
-                <XCircle className="h-4 w-4 mr-2" />
-                Recusar Oferta
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Recusar Oferta</DialogTitle>
-              </DialogHeader>
-              <Form {...rejectionForm}>
-                <form onSubmit={rejectionForm.handleSubmit(handleReject)} className="space-y-4">
-                  <FormField
-                    control={rejectionForm.control}
-                    name="rejection_reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Motivo da Recusa</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Explique o motivo da recusa..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button 
-                    type="submit" 
-                    variant="destructive"
-                    className="w-full"
-                    disabled={updateStatusMutation.isPending}
-                  >
-                    {updateStatusMutation.isPending ? 'Processando...' : 'Confirmar Recusa'}
+              <Dialog open={isCounterOfferOpen} onOpenChange={setIsCounterOfferOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Fazer Contraproposta
                   </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Fazer Contraproposta</DialogTitle>
+                  </DialogHeader>
+                  <Form {...counterOfferForm}>
+                    <form onSubmit={counterOfferForm.handleSubmit(handleCounterOffer)} className="space-y-4">
+                      <FormField
+                        control={counterOfferForm.control}
+                        name="counter_price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Novo Valor (R$)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                placeholder="Digite o novo valor"
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? 'Enviando...' : 'Enviar Contraproposta'}
+                      </Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isRejectionOpen} onOpenChange={setIsRejectionOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="w-full">
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Recusar Oferta
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Recusar Oferta</DialogTitle>
+                  </DialogHeader>
+                  <Form {...rejectionForm}>
+                    <form onSubmit={rejectionForm.handleSubmit(handleReject)} className="space-y-4">
+                      <FormField
+                        control={rejectionForm.control}
+                        name="rejection_reason"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Motivo da Recusa</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Explique o motivo da recusa..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        variant="destructive"
+                        className="w-full"
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar Recusa'}
+                      </Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </>
+          ) : (
+            // Client actions for counter-offers
+            <>
+              <Button 
+                onClick={handleAccept}
+                disabled={isUpdating}
+                className="w-full"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {isUpdating ? 'Processando...' : 'Aceitar Contraproposta'}
+              </Button>
+
+              <Dialog open={isRejectionOpen} onOpenChange={setIsRejectionOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Recusar Contraproposta
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Recusar Contraproposta</DialogTitle>
+                  </DialogHeader>
+                  <Form {...rejectionForm}>
+                    <form onSubmit={rejectionForm.handleSubmit(handleReject)} className="space-y-4">
+                      <FormField
+                        control={rejectionForm.control}
+                        name="rejection_reason"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Motivo da Recusa (opcional)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Explique o motivo da recusa..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        variant="destructive"
+                        className="w-full"
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar Recusa'}
+                      </Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

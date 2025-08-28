@@ -10,10 +10,18 @@ import { useNavigate } from 'react-router-dom';
 import { getOffers } from '@/lib/offers';
 import { OfferActions } from '@/components/offers/OfferActions';
 import Header from '@/components/Header';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { useEffect } from 'react';
 
 const Offers: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { clearUnread } = useRealtimeNotifications();
+
+  // Clear unread notifications when user visits offers page
+  useEffect(() => {
+    clearUnread();
+  }, [clearUnread]);
 
   const { data: offers = [], isLoading, error } = useQuery({
     queryKey: ['offers', user?.id],
@@ -58,7 +66,7 @@ const Offers: React.FC = () => {
         return 'default';
       case 'rejected':
         return 'destructive';
-      case 'counter_offer':
+      case 'counter_proposed':
         return 'secondary';
       default:
         return 'outline';
@@ -73,7 +81,7 @@ const Offers: React.FC = () => {
         return 'Aceita';
       case 'rejected':
         return 'Rejeitada';
-      case 'counter_offer':
+      case 'counter_proposed':
         return 'Contraproposta';
       default:
         return status;

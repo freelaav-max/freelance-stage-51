@@ -11,11 +11,19 @@ import { getOffers } from '@/lib/offers';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { OfferActions } from '@/components/offers/OfferActions';
 import Header from '@/components/Header';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { useEffect } from 'react';
 
 const OfferChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { clearUnread } = useRealtimeNotifications();
+
+  // Clear unread notifications when user visits offer chat
+  useEffect(() => {
+    clearUnread();
+  }, [clearUnread]);
 
   const { data: offers = [], isLoading, error } = useQuery({
     queryKey: ['offers', user?.id],
@@ -70,7 +78,7 @@ const OfferChat: React.FC = () => {
         return 'default';
       case 'rejected':
         return 'destructive';
-      case 'counter_offer':
+      case 'counter_proposed':
         return 'secondary';
       default:
         return 'outline';
@@ -85,7 +93,7 @@ const OfferChat: React.FC = () => {
         return 'Aceita';
       case 'rejected':
         return 'Rejeitada';
-      case 'counter_offer':
+      case 'counter_proposed':
         return 'Contraproposta';
       default:
         return status;
@@ -172,6 +180,12 @@ const OfferChat: React.FC = () => {
                 {isFreelancer && offer.status === 'pending' && (
                   <div className="pt-4 border-t">
                     <OfferActions offer={offer} userType="freelancer" />
+                  </div>
+                )}
+                
+                {!isFreelancer && offer.status === 'counter_proposed' && (
+                  <div className="pt-4 border-t">
+                    <OfferActions offer={offer} userType="client" />
                   </div>
                 )}
               </CardContent>
