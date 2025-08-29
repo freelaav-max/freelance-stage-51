@@ -30,13 +30,7 @@ const HeroSection = () => {
               <Button size="lg" className="btn-gradient text-lg px-8" onClick={() => navigate('/auth')}>
                 Começar Agora
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/para-freelancers')}>
-                Para Freelancers
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-center lg:justify-start gap-4 mt-8">
-              <Button variant="link" className="text-primary underline" onClick={() => navigate('/como-funciona')}>
+              <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/como-funciona')}>
                 Como Funciona
               </Button>
             </div>
