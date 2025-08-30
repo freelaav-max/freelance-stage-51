@@ -12,9 +12,24 @@ export const resolveStorageUrl = (
     return value;
   }
   
-  // Resolve URL do Supabase Storage
-  const { data } = supabase.storage.from(bucket).getPublicUrl(value);
-  return data.publicUrl;
+  // Se é um path relativo que começa com /, remove para evitar path duplo
+  const cleanPath = value.startsWith('/') ? value.substring(1) : value;
+  
+  try {
+    // Resolve URL do Supabase Storage
+    const { data } = supabase.storage.from(bucket).getPublicUrl(cleanPath);
+    
+    // Verifica se a URL foi gerada corretamente
+    if (data?.publicUrl && data.publicUrl !== '') {
+      return data.publicUrl;
+    }
+    
+    console.warn(`Failed to generate storage URL for ${bucket}/${cleanPath}`);
+    return undefined;
+  } catch (error) {
+    console.error(`Error resolving storage URL for ${bucket}/${cleanPath}:`, error);
+    return undefined;
+  }
 };
 
 export const getAvatarUrl = (avatarPath?: string | null): string | undefined => {

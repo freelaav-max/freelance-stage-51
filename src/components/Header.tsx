@@ -25,6 +25,10 @@ const Header: React.FC = () => {
             src="/freelaav-logo.png" 
             alt="FreeLaav" 
             className="h-8 w-auto mr-2"
+            onError={(e) => {
+              console.error('Failed to load logo');
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <span className="text-xl font-bold">FreeLaav</span>
         </div>
