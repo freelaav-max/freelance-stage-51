@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,11 +11,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
-import { sendMessage, getMessages, markMessageAsRead, NewMessageData, Message } from '@/lib/messages';
+import { sendMessage, getMessages, markMessageAsRead, NewMessageData } from '@/lib/messages';
 import { Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 const messageSchema = z.object({
   content: z.string().min(1, 'Mensagem não pode estar vazia'),
@@ -46,8 +48,48 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages', offerId],
     queryFn: () => getMessages(offerId),
-    refetchInterval: 5000, // Poll every 5 seconds for new messages
   });
+
+  // Set up Realtime subscription for new messages
+  useEffect(() => {
+    if (!user || !offerId) return;
+
+    console.log('Setting up realtime subscription for offer:', offerId);
+
+    const channel = supabase
+      .channel(`messages-${offerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `offer_id=eq.${offerId}`,
+        },
+        (payload) => {
+          console.log('New message received via realtime:', payload);
+          
+          // Invalidate and refetch messages
+          queryClient.invalidateQueries({ queryKey: ['messages', offerId] });
+          
+          // Show toast for received messages (not sent by current user)
+          if (payload.new.sender_id !== user.id) {
+            toast({
+              title: 'Nova mensagem',
+              description: 'Você recebeu uma nova mensagem',
+            });
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user, offerId, queryClient]);
 
   // Send message mutation
   const sendMessageMutation = useMutation({

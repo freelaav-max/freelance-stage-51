@@ -1,50 +1,36 @@
+
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Calendar, MapPin, DollarSign, Clock } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { getOffers } from '@/lib/offers';
 import { ChatInterface } from '@/components/chat/ChatInterface';
-import { OfferActions } from '@/components/offers/OfferActions';
-import Header from '@/components/Header';
-import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
-import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getOfferById } from '@/lib/offers';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const OfferChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { clearUnread } = useRealtimeNotifications();
 
-  // Clear unread notifications when user visits offer chat
-  useEffect(() => {
-    clearUnread();
-  }, [clearUnread]);
-
-  const { data: offers = [], isLoading, error } = useQuery({
-    queryKey: ['offers', user?.id],
-    queryFn: () => getOffers(user!.id),
-    enabled: !!user,
-  });
-
-  const offer = offers.find(o => o.id === id);
-
-  if (!user) {
-    navigate('/auth');
-    return null;
+  // Redirect if no offer ID
+  if (!id) {
+    return <Navigate to="/ofertas" replace />;
   }
+
+  // Fetch specific offer by ID
+  const { data: offer, isLoading, error } = useQuery({
+    queryKey: ['offer', id],
+    queryFn: () => getOfferById(id),
+  });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex justify-center items-center min-h-[400px]">
-            <div className="text-lg text-muted-foreground">Carregando oferta...</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">Carregando oferta...</div>
           </div>
         </div>
       </div>
@@ -53,162 +39,100 @@ const OfferChat: React.FC = () => {
 
   if (error || !offer) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex justify-center items-center min-h-[400px]">
-            <div className="text-lg text-destructive">Oferta não encontrada</div>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <h2 className="text-xl font-semibold mb-2">Oferta não encontrada</h2>
+              <p className="text-muted-foreground">
+                A oferta que você está procurando não existe ou foi removida.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  const isFreelancer = user.user_metadata?.user_type === 'freelancer';
-  const isClient = user.user_metadata?.user_type === 'client';
-  
-  // Determine receiver based on user type
-  const receiverId = isFreelancer ? offer.client_id : offer.freelancer_id;
-  const receiverProfile = isFreelancer ? offer.client : offer.freelancer;
-  const receiverName = receiverProfile?.full_name || 'Usuário';
+  // Check if user is involved in this offer
+  if (!user || (user.id !== offer.client_id && user.id !== offer.freelancer_id)) {
+    return <Navigate to="/ofertas" replace />;
+  }
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'accepted':
-        return 'default';
-      case 'rejected':
-        return 'destructive';
-      case 'counter_proposed':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
+  // Determine who is the other party in the conversation
+  const isClient = user.id === offer.client_id;
+  const otherParty = isClient ? offer.freelancer : offer.client;
+  const receiverId = isClient ? offer.freelancer_id : offer.client_id;
+
+  const statusColors = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    accepted: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+    counter_proposed: 'bg-blue-100 text-blue-800',
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Pendente';
-      case 'accepted':
-        return 'Aceita';
-      case 'rejected':
-        return 'Rejeitada';
-      case 'counter_proposed':
-        return 'Contraproposta';
-      default:
-        return status;
-    }
+  const statusLabels = {
+    pending: 'Pendente',
+    accepted: 'Aceita',
+    rejected: 'Rejeitada',
+    counter_proposed: 'Contraproposta',
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/ofertas')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para ofertas
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Offer Details */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{offer.title}</CardTitle>
-                  <Badge variant={getStatusBadgeVariant(offer.status)}>
-                    {getStatusText(offer.status)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{new Date(offer.event_date).toLocaleDateString('pt-BR')}</span>
-                    {offer.event_time && (
-                      <span>às {offer.event_time}</span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{offer.location}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>R$ {offer.budget}</span>
-                  </div>
-                  
-                  {offer.duration && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{offer.duration} horas</span>
-                    </div>
-                  )}
-                </div>
-
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Offer Details */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-xl">{offer.title}</CardTitle>
+                <p className="text-muted-foreground mt-1">
+                  {isClient ? `Para: ${otherParty?.full_name}` : `De: ${otherParty?.full_name}`}
+                </p>
+              </div>
+              <Badge className={statusColors[offer.status as keyof typeof statusColors]}>
+                {statusLabels[offer.status as keyof typeof statusLabels]}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Data do Evento</span>
+                <p>{format(new Date(offer.event_date), 'dd/MM/yyyy', { locale: ptBR })}</p>
+              </div>
+              {offer.event_time && (
                 <div>
-                  <h4 className="font-medium text-sm mb-2">Descrição</h4>
-                  <p className="text-sm text-muted-foreground">{offer.description}</p>
+                  <span className="text-sm font-medium text-muted-foreground">Horário</span>
+                  <p>{offer.event_time}</p>
                 </div>
+              )}
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Orçamento</span>
+                <p>R$ {offer.budget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+            <div className="mb-4">
+              <span className="text-sm font-medium text-muted-foreground">Local</span>
+              <p>{offer.location}</p>
+            </div>
+            {offer.description && (
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Descrição</span>
+                <p className="mt-1">{offer.description}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-                <div className="pt-2">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={undefined} />
-                      <AvatarFallback className="text-xs">
-                        {receiverName.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-sm">{receiverName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {isFreelancer ? 'Cliente' : 'Freelancer'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {isFreelancer && offer.status === 'pending' && (
-                  <div className="pt-4 border-t">
-                    <OfferActions offer={offer} userType="freelancer" />
-                  </div>
-                )}
-                
-                {!isFreelancer && offer.status === 'counter_proposed' && (
-                  <div className="pt-4 border-t">
-                    <OfferActions offer={offer} userType="client" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Chat */}
-          <div className="lg:col-span-2">
-            <Card className="h-[600px] flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-lg">Conversa</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 p-0">
-                <ChatInterface
-                  offerId={offer.id}
-                  receiverId={receiverId}
-                  receiverName={receiverName}
-                  receiverAvatar=""
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        {/* Chat Interface */}
+        <ChatInterface
+          offerId={offer.id}
+          receiverId={receiverId}
+          receiverName={otherParty?.full_name || 'Usuário'}
+          receiverAvatar={undefined} // Avatar URL would come from profiles table
+        />
       </div>
     </div>
   );

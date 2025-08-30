@@ -1,24 +1,10 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface SearchFilters {
-  specialties?: string[];
-  city?: string;
-  state?: string;
-  radius?: number; // km
-  minPrice?: number;
-  maxPrice?: number;
-  minRating?: number;
-  availableDate?: string;
-  sortBy?: 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'proximity';
-  page?: number;
-  limit?: number;
 }
 
 serve(async (req) => {
@@ -27,152 +13,187 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    );
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
 
-    const { searchTerm, filters }: { searchTerm?: string; filters: SearchFilters } = await req.json();
-    
-    const {
-      specialties = [],
-      city,
-      state,
+    const { searchTerm, filters = {} } = await req.json()
+    const { 
+      specialties = [], 
+      city, 
+      state, 
+      page = 1, 
+      limit = 12,
       minPrice,
       maxPrice,
-      minRating = 0,
-      sortBy = 'relevance',
-      page = 1,
-      limit = 12
-    } = filters;
+      minRating = 0
+    } = filters
 
-    // Build secure query using the RPC function for public data
-    // This ensures we only get safe, public information about freelancers
-    let query = supabaseClient
+    console.log('Search request:', { searchTerm, filters })
+
+    // Base query for freelancers
+    let query = supabase
       .from('freelancer_profiles')
       .select(`
         *,
-        freelancer_specialties!inner(specialty),
-        portfolio_items(id, title, image_url, video_url, audio_url, description)
-      `);
+        profiles!inner(
+          id,
+          full_name,
+          email,
+          city,
+          state,
+          avatar_url,
+          user_type
+        ),
+        freelancer_specialties(specialty),
+        portfolio_items(
+          id,
+          title,
+          image_url,
+          video_url,
+          audio_url,
+          description
+        )
+      `, { count: 'exact' })
+      .eq('profiles.user_type', 'freelancer')
 
-    // Apply filters
+    // Apply specialty filter if provided
     if (specialties.length > 0) {
-      query = query.in('freelancer_specialties.specialty', specialties);
+      const { data: freelancersWithSpecialties } = await supabase
+        .from('freelancer_specialties')
+        .select('freelancer_id')
+        .in('specialty', specialties)
+      
+      if (freelancersWithSpecialties) {
+        const freelancerIds = freelancersWithSpecialties.map(fs => fs.freelancer_id)
+        query = query.in('id', freelancerIds)
+      }
     }
 
-    // For location filtering, we'll need to get the public freelancer info
-    // The profiles join won't work anymore due to RLS restrictions
-
-    if (minPrice !== undefined) {
-      query = query.gte('hourly_rate', minPrice);
-    }
-
-    if (maxPrice !== undefined) {
-      query = query.lte('hourly_rate', maxPrice);
-    }
-
+    // Apply rating filter
     if (minRating > 0) {
-      query = query.gte('rating', minRating);
+      query = query.gte('rating', minRating)
     }
 
-    // For text search, we'll search in bio only (profiles data is now secured)
-    if (searchTerm) {
-      query = query.ilike('bio', `%${searchTerm}%`);
+    // Apply price filters
+    if (minPrice) {
+      query = query.gte('hourly_rate', minPrice)
+    }
+    if (maxPrice) {
+      query = query.lte('hourly_rate', maxPrice)
     }
 
-    // Apply sorting
-    switch (sortBy) {
-      case 'price_asc':
-        query = query.order('hourly_rate', { ascending: true });
-        break;
-      case 'price_desc':
-        query = query.order('hourly_rate', { ascending: false });
-        break;
-      case 'rating':
-        query = query.order('rating', { ascending: false });
-        break;
-      case 'relevance':
-      default:
-        // Pro members first, then by rating, then by total_jobs
-        query = query.order('is_pro_member', { ascending: false })
-                     .order('rating', { ascending: false })
-                     .order('total_jobs', { ascending: false });
-        break;
-    }
-
-    // Apply pagination
-    const offset = (page - 1) * limit;
-    query = query.range(offset, offset + limit - 1);
-
-    const { data: freelancers, error, count } = await query;
+    // Execute query with pagination
+    const offset = (page - 1) * limit
+    const { data: freelancers, error, count } = await query
+      .range(offset, offset + limit - 1)
+      .order('rating', { ascending: false })
 
     if (error) {
-      console.error('Search error:', error);
+      console.error('Error fetching freelancers:', error)
       return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ error: 'Failed to search freelancers' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Process results and get public profile data securely
-    const processedResults = await Promise.all(
-      freelancers?.map(async (freelancer) => {
-        // Get public profile information using the secure RPC function
-        const { data: publicProfile } = await supabaseClient
-          .rpc('get_public_freelancer_info', { freelancer_id: freelancer.id });
-        
-        const profileInfo = publicProfile?.[0] || {};
-        
-        const specialtiesList = Array.isArray(freelancer.freelancer_specialties) 
-          ? freelancer.freelancer_specialties.map((s: any) => s.specialty)
-          : [freelancer.freelancer_specialties?.specialty].filter(Boolean);
+    // Process results and apply city/state filters
+    let processedResults = (freelancers || []).map((freelancer: any) => ({
+      id: freelancer.id,
+      bio: freelancer.bio || '',
+      hourly_rate: freelancer.hourly_rate || 0,
+      experience_years: freelancer.experience_years || 0,
+      rating: freelancer.rating || 0,
+      total_reviews: freelancer.total_reviews || 0,
+      total_jobs: freelancer.total_jobs || 0,
+      is_pro_member: freelancer.is_pro_member || false,
+      specialties: freelancer.freelancer_specialties?.map((fs: any) => fs.specialty) || [],
+      portfolio: freelancer.portfolio_items?.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        media_url: item.image_url || item.video_url || item.audio_url,
+        thumbnail_url: item.image_url,
+        media_type: item.image_url ? 'image' : item.video_url ? 'video' : 'audio'
+      })) || [],
+      user: {
+        id: freelancer.profiles.id,
+        full_name: freelancer.profiles.full_name,
+        email: freelancer.profiles.email,
+        avatar_url: freelancer.profiles.avatar_url,
+        city: freelancer.profiles.city,
+        state: freelancer.profiles.state
+      }
+    }))
 
-        const portfolioItems = Array.isArray(freelancer.portfolio_items)
-          ? freelancer.portfolio_items.slice(0, 3) // Limit to 3 items for search results
-          : [];
+    // Apply city/state filters in post-processing
+    if (city) {
+      processedResults = processedResults.filter(freelancer => 
+        freelancer.user.city?.toLowerCase().includes(city.toLowerCase())
+      )
+    }
 
-        return {
-          ...freelancer,
-          specialties: specialtiesList,
-          portfolio: portfolioItems,
-          user: {
-            // Only expose public information - secure data access
-            id: profileInfo.id,
-            full_name: profileInfo.full_name,
-            city: profileInfo.city,
-            state: profileInfo.state,
-            avatar_url: profileInfo.avatar_url
-          }
-        };
-      }) || []
-    );
+    if (state) {
+      processedResults = processedResults.filter(freelancer => 
+        freelancer.user.state?.toLowerCase().includes(state.toLowerCase())
+      )
+    }
 
-    // Calculate total pages
-    const totalPages = count ? Math.ceil(count / limit) : 1;
+    // Apply search term filter if provided
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      processedResults = processedResults.filter(freelancer =>
+        freelancer.user.full_name.toLowerCase().includes(term) ||
+        freelancer.bio.toLowerCase().includes(term) ||
+        freelancer.specialties.some((spec: string) => spec.toLowerCase().includes(term))
+      )
+    }
+
+    // Calculate pagination after filtering
+    const total = processedResults.length
+    const totalPages = Math.ceil(total / limit)
+    const hasMore = page < totalPages
+
+    // Apply final pagination to processed results
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    const paginatedResults = processedResults.slice(startIndex, endIndex)
+
+    const response = {
+      results: paginatedResults,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore
+      }
+    }
+
+    console.log(`Found ${total} freelancers, returning ${paginatedResults.length} for page ${page}`)
 
     return new Response(
-      JSON.stringify({
-        results: processedResults,
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages,
-          hasMore: page < totalPages
-        }
-      }),
+      JSON.stringify(response),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        status: 200, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
       }
-    );
+    )
 
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('Unexpected error in search-freelancers:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    )
   }
-});
+})
