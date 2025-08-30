@@ -3,7 +3,9 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { FreelancerSearchResult } from '@/hooks/useFreelancerSearch';
+import { getAvatarUrl, getPortfolioImageUrl } from '@/lib/storage';
 import { MapPin, Star, Heart, Camera, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -60,7 +62,7 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
         {/* Header com Avatar e Info Básica */}
         <div className="flex items-start gap-3 mb-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={user.avatar_url} alt={user.full_name} />
+            <AvatarImage src={getAvatarUrl(user.avatar_url)} alt={user.full_name} />
             <AvatarFallback className="bg-primary/10 text-primary font-medium">
               {getUserInitials(user.full_name)}
             </AvatarFallback>
@@ -114,8 +116,8 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
             {portfolio.slice(0, 3).map((item, index) => (
               <div key={item.id} className="aspect-square rounded-md overflow-hidden bg-muted">
                 {item.media_type === 'image' ? (
-                  <img
-                    src={item.thumbnail_url || item.media_url}
+                  <ImageWithFallback
+                    src={getPortfolioImageUrl(item.thumbnail_url || item.media_url)}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

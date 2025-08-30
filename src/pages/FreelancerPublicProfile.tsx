@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { Star, MapPin, Clock, DollarSign, Camera, MessageCircle, Heart } from 'lucide-react';
 import { useFreelancerProfile } from '@/hooks/useFreelancerProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { SPECIALTIES } from '@/lib/freelancer';
+import { getAvatarUrl, getPortfolioImageUrl } from '@/lib/storage';
 import { AvailabilityDisplay } from '@/components/AvailabilityDisplay';
 import { OfferForm } from '@/components/OfferForm';
 import Header from '@/components/Header';
@@ -49,7 +52,7 @@ const FreelancerPublicProfile: React.FC = () => {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={profile.profiles?.avatar_url || undefined} />
+                    <AvatarImage src={getAvatarUrl(profile.profiles?.avatar_url)} />
                     <AvatarFallback className="text-lg">
                       {profile.profiles?.full_name?.charAt(0) || <Camera className="h-8 w-8" />}
                     </AvatarFallback>
@@ -192,8 +195,8 @@ const FreelancerPublicProfile: React.FC = () => {
                     {portfolioItems.map((item) => (
                       <div key={item.id} className="space-y-2">
                         {item.image_url ? (
-                          <img
-                            src={item.image_url}
+                          <ImageWithFallback
+                            src={getPortfolioImageUrl(item.image_url)}
                             alt={item.title}
                             className="w-full h-48 object-cover rounded-lg"
                           />

@@ -22,7 +22,7 @@ const Header: React.FC = () => {
           onClick={() => navigate('/')}
         >
           <img 
-            src="/src/assets/freelaav-logo.png" 
+            src="/freelaav-logo.png" 
             alt="FreeLaav" 
             className="h-8 w-auto mr-2"
           />

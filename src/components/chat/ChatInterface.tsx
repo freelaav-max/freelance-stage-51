@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { sendMessage, getMessages, markMessageAsRead, NewMessageData } from '@/lib/messages';
+import { getAvatarUrl } from '@/lib/storage';
 import { Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -160,7 +161,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={receiverAvatar} alt={receiverName} />
+            <AvatarImage src={getAvatarUrl(receiverAvatar)} alt={receiverName} />
             <AvatarFallback>{receiverName.charAt(0)}</AvatarFallback>
           </Avatar>
           <span className="text-lg">{receiverName}</span>
