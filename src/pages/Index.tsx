@@ -5,6 +5,7 @@ import SearchSection from "@/components/SearchSection";
 import FreelancerGrid from "@/components/FreelancerGrid";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
+import { DemoAccessButton } from "@/components/DemoAccessButton";
 
 const Index = () => {
   return (
@@ -17,6 +18,7 @@ const Index = () => {
         <HowItWorks />
       </main>
       <Footer />
+      <DemoAccessButton />
     </div>
   );
 };

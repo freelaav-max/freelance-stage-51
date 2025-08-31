@@ -23,14 +23,13 @@ const Header: React.FC = () => {
         >
           <img 
             src="/freelaav-logo.png" 
-            alt="FreeLaav" 
-            className="h-8 w-auto mr-2"
+            alt="FreelaAV" 
+            className="h-10 w-auto"
             onError={(e) => {
               console.error('Failed to load logo');
               e.currentTarget.style.display = 'none';
             }}
           />
-          <span className="text-xl font-bold">FreeLaav</span>
         </div>
 
         <nav className="hidden md:flex items-center space-x-6">
