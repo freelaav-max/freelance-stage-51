@@ -27,10 +27,10 @@ const HeroSection = () => {
               Para clientes: contrate profissionais qualificados com segurança e agilidade.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" className="btn-gradient text-lg px-8" onClick={() => navigate('/auth')}>
+              <Button size="lg" variant="premium" className="text-lg px-8" onClick={() => navigate('/auth')}>
                 Começar Agora
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/como-funciona')}>
+              <Button size="lg" variant="hero" className="text-lg px-8" onClick={() => navigate('/como-funciona')}>
                 Como Funciona
               </Button>
             </div>

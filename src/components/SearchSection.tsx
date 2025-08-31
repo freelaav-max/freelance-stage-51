@@ -151,14 +151,15 @@ const SearchSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <Button 
               onClick={handleSearch}
-              className="btn-gradient w-full sm:w-auto px-8"
+              variant="premium"
+              className="w-full sm:w-auto px-8"
               size="lg"
             >
               <Search className="mr-2 h-4 w-4" />
               Buscar Profissionais
             </Button>
             <Button 
-              variant="outline" 
+              variant="hero" 
               className="w-full sm:w-auto"
               onClick={() => navigate('/search')}
             >

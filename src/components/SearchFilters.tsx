@@ -245,7 +245,7 @@ const SearchFilters = ({ filters, onFiltersChange }: SearchFiltersProps) => {
 
       {/* Botões de Ação */}
       <div className="space-y-2 pt-4 border-t">
-        <Button onClick={applyFilters} className="w-full">
+        <Button onClick={applyFilters} variant="premium" className="w-full">
           Aplicar Filtros
         </Button>
         <Button onClick={clearFilters} variant="outline" className="w-full">

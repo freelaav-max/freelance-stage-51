@@ -194,7 +194,14 @@ const Auth = () => {
         <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm neon-glow">
           <CardHeader className="text-center">
             <div className="w-16 h-16 rounded-lg bg-gradient-primary flex items-center justify-center mx-auto mb-4 p-2">
-              <img src={freelaavLogo} alt="FreelaAV" className="w-full h-full object-contain" />
+              <img 
+                src="/lovable-uploads/c127466c-6a9e-4bef-bb44-66895ef039fb.png" 
+                alt="FreelaAV" 
+                className="w-full h-full object-contain" 
+                onError={(e) => {
+                  e.currentTarget.src = freelaavLogo;
+                }}
+              />
             </div>
             <CardTitle className="text-2xl font-heading text-primary">FreelaAV</CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -263,14 +270,49 @@ const Auth = () => {
                       {loginForm.formState.isSubmitting ? "Entrando..." : "Entrar"}
                     </Button>
                     
-                    <Button
-                      type="button"
-                      variant="link"
-                      className="w-full"
-                      onClick={() => setActiveTab('reset-password')}
-                    >
-                      Esqueceu sua senha?
-                    </Button>
+                     <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="w-full"
+                        onClick={() => setActiveTab('reset-password')}
+                      >
+                        Esqueceu sua senha?
+                      </Button>
+                      
+                      {/* Demo Login Section */}
+                      <div className="border-t pt-4 mt-4">
+                        <p className="text-center text-sm text-muted-foreground mb-3">
+                          Acesso rápido para demonstração:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              loginForm.setValue('email', 'freelancer@demo.com');
+                              loginForm.setValue('password', 'demo123');
+                            }}
+                          >
+                            Demo Freelancer
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              loginForm.setValue('email', 'cliente@demo.com');
+                              loginForm.setValue('password', 'demo123');
+                            }}
+                          >
+                            Demo Cliente
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </form>
                 </Form>
               </TabsContent>

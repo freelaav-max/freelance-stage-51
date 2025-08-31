@@ -7,44 +7,51 @@
 
 @layer base {
   :root {
-    /* FreelaAV Dark Brand Colors - Neon Purple/Cyan theme */
-    --primary: 285 85% 60%; /* Electric purple */
+    /* FreelaAV Brand Colors - Updated to match brand guide */
+    --primary: 285 85% 60%; /* Roxo Elétrico (#9f54ff) */
     --primary-foreground: 0 0% 98%;
-    --secondary: 190 95% 55%; /* Bright cyan */
+    --primary-variant: 285 85% 70%; /* Lighter shade for gradients */
+    --secondary: 190 95% 55%; /* Ciano Brilhante (#00d4ff) */
     --secondary-foreground: 0 0% 4%;
     
-    /* Dark Theme Colors */
-    --background: 240 10% 4%; /* Deep dark background */
-    --foreground: 0 0% 95%; /* Light text */
-    --muted: 240 5% 12%; /* Dark muted */
-    --muted-foreground: 240 5% 65%; /* Muted text */
+    /* Dark Theme Colors - Professional dark theme */
+    --background: 0 0% 4%; /* Fundo Principal (#0a0a0a) */
+    --foreground: 0 0% 100%; /* Texto Principal (#FFFFFF) */
+    --muted: 0 0% 10%; /* Fundo Secundário (#1a1a1a) */
+    --muted-foreground: 240 7% 67%; /* Texto Secundário (#a1a1aa) */
     --accent: 240 6% 16%; /* Dark accent */
     --accent-foreground: 0 0% 95%;
     
-    /* UI Colors - Dark theme */
-    --card: 240 8% 6%; /* Dark cards */
+    /* UI Colors - Enhanced for better UX */
+    --card: 0 0% 8%; /* Slightly lighter cards for better depth */
     --card-foreground: 0 0% 95%;
     --border: 240 6% 20%; /* Subtle borders */
-    --input: 240 6% 16%; /* Dark inputs */
+    --input: 240 6% 14%; /* Enhanced input background */
     --ring: 285 85% 60%; /* Focus ring */
     
     /* Dark popover */
-    --popover: 240 8% 6%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
     
-    /* Success/Warning/Error - Dark optimized */
-    --success: 142 76% 45%;
+    /* Status Colors - Matching brand guide */
+    --success: 142 76% 36%; /* Sucesso (#22c55e) */
     --success-foreground: 0 0% 98%;
-    --warning: 38 92% 60%;
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 4%;
-    --destructive: 0 84% 65%;
+    --destructive: 0 84% 60%; /* Erro (#ef4444) */
     --destructive-foreground: 0 0% 98%;
     
-    /* FreelaAV Neon Gradients */
+    /* FreelaAV Brand Gradients - Enhanced */
     --gradient-primary: linear-gradient(135deg, hsl(285 85% 60%) 0%, hsl(190 95% 55%) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(190 95% 55%) 0%, hsl(285 85% 60%) 100%);
     --gradient-hero: linear-gradient(135deg, hsl(285 85% 60% / 0.15) 0%, hsl(190 95% 55% / 0.15) 100%);
     --gradient-neon: linear-gradient(45deg, hsl(285 85% 60% / 0.8) 0%, hsl(190 95% 55% / 0.8) 50%, hsl(285 85% 60% / 0.8) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 4%) 0%, hsl(0 0% 6%) 100%);
+    
+    /* Professional shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(285 85% 60% / 0.3);
+    --shadow-glow: 0 0 40px hsl(285 85% 60% / 0.4);
+    --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.3);
     
     /* Premium variant */
     --premium: 45 100% 60%;
@@ -53,9 +60,12 @@
     /* Spacing */
     --radius: 0.75rem;
     
-    /* Typography */
+    /* Typography - Inter font family */
     --font-heading: 'Inter', system-ui, sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
+    
+    /* Smooth transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .light {
@@ -111,6 +121,11 @@
   /* Cards */
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-hover:hover {
+    box-shadow: var(--shadow-elegant);
   }
   
   .freelancer-card {
@@ -170,7 +185,7 @@
   
   /* Neon accents for FreelaAV */
   .neon-glow {
-    box-shadow: 0 0 20px hsl(285 85% 60% / 0.3), 0 0 40px hsl(190 95% 55% / 0.2);
+    box-shadow: var(--shadow-glow);
   }
   
   /* Dashboard styles */

@@ -12,7 +12,14 @@ const Footer = () => {
           <div>
             <div className="flex items-center space-x-2 mb-6">
               <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center p-1.5">
-                <img src={freelaavLogo} alt="FreelaAV" className="w-full h-full object-contain" />
+                <img 
+                  src="/lovable-uploads/c127466c-6a9e-4bef-bb44-66895ef039fb.png" 
+                  alt="FreelaAV" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = freelaavLogo;
+                  }}
+                />
               </div>
               <span className="font-heading font-bold text-xl text-primary">FreelaAV</span>
             </div>
