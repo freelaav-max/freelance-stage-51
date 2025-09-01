@@ -35,7 +35,7 @@ const Header: React.FC = () => {
           <img 
             src="/lovable-uploads/c127466c-6a9e-4bef-bb44-66895ef039fb.png"
             alt="FreelaAV" 
-            className="h-10 w-auto"
+            className="h-30 w-auto"
             onError={(e) => {
               console.error('Failed to load logo');
               e.currentTarget.style.display = 'none';
