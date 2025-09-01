@@ -33,7 +33,7 @@ const Header: React.FC = () => {
           onClick={() => navigate('/')}
         >
           <img 
-            src="src/assets/LOGO sem fundo.png"
+            src="/assets/LOGO sem fundo.png"
             alt="FreelaAV" 
             className="h-10 w-auto"
             onError={(e) => {
