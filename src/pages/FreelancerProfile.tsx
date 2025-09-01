@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuthRequired } from '@/hooks/useAuthRequired';
 import { FreelancerProfileForm } from '@/components/FreelancerProfileForm';
+import Header from '@/components/Header';
 
 const FreelancerProfile: React.FC = () => {
   const { loading } = useAuthRequired();
@@ -11,6 +12,7 @@ const FreelancerProfile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="container mx-auto py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Meu Perfil</h1>

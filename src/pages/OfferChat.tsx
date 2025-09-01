@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOfferById } from '@/lib/offers';
@@ -13,6 +15,7 @@ import { ptBR } from 'date-fns/locale';
 const OfferChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Redirect if no offer ID
   if (!id) {
@@ -79,8 +82,23 @@ const OfferChat: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background">
+      {/* Mini header for chat page */}
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/ofertas')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para Ofertas
+          </Button>
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
         {/* Offer Details */}
         <Card>
           <CardHeader>
@@ -133,6 +151,7 @@ const OfferChat: React.FC = () => {
           receiverName={otherParty?.full_name || 'Usuário'}
           receiverAvatar={undefined} // Avatar URL would come from profiles table
         />
+        </div>
       </div>
     </div>
   );
