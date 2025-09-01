@@ -458,6 +458,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          available_dates: string | null
           avatar_url: string | null
           city: string | null
           country: string | null
@@ -466,12 +467,18 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          profile_complete: boolean | null
+          specialties: string[] | null
+          specific_rates: Json | null
+          standard_rate: number | null
           state: string | null
           updated_at: string | null
           user_type: Database["public"]["Enums"]["user_type"]
+          whatsapp: string | null
           whatsapp_notification_opt_in: boolean
         }
         Insert: {
+          available_dates?: string | null
           avatar_url?: string | null
           city?: string | null
           country?: string | null
@@ -480,12 +487,18 @@ export type Database = {
           full_name: string
           id: string
           phone?: string | null
+          profile_complete?: boolean | null
+          specialties?: string[] | null
+          specific_rates?: Json | null
+          standard_rate?: number | null
           state?: string | null
           updated_at?: string | null
           user_type: Database["public"]["Enums"]["user_type"]
+          whatsapp?: string | null
           whatsapp_notification_opt_in?: boolean
         }
         Update: {
+          available_dates?: string | null
           avatar_url?: string | null
           city?: string | null
           country?: string | null
@@ -494,9 +507,14 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          profile_complete?: boolean | null
+          specialties?: string[] | null
+          specific_rates?: Json | null
+          standard_rate?: number | null
           state?: string | null
           updated_at?: string | null
           user_type?: Database["public"]["Enums"]["user_type"]
+          whatsapp?: string | null
           whatsapp_notification_opt_in?: boolean
         }
         Relationships: []

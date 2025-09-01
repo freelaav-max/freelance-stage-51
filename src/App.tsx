@@ -22,6 +22,7 @@ import NotificationsPage from "./pages/Notifications";
 import Offers from "./pages/Offers";
 import OfferChat from "./pages/OfferChat";
 import NotFound from "./pages/NotFound";
+import OnboardingApp from "./components/OnboardingApp";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/notificacoes" element={<NotificationsPage />} />
               <Route path="/ofertas" element={<Offers />} />
               <Route path="/oferta/:id" element={<OfferChat />} />
+              <Route path="/onboarding-app" element={<OnboardingApp />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
