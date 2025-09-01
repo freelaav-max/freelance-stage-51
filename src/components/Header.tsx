@@ -26,16 +26,16 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center h-16">
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div 
-          className="flex items-center cursor-pointer h-full" 
+          className="flex items-center cursor-pointer" 
           onClick={() => navigate('/')}
         >
           <img 
             src="/lovable-uploads/c127466c-6a9e-4bef-bb44-66895ef039fb.png"
             alt="FreelaAV" 
-            className="h-12 w-auto object-contain"
+            className="h-10 w-auto"
             onError={(e) => {
               console.error('Failed to load logo');
               e.currentTarget.style.display = 'none';
