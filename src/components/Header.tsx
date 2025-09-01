@@ -26,8 +26,8 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="border-b bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/90">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div 
           className="flex items-center cursor-pointer" 
           onClick={() => navigate('/')}
@@ -35,7 +35,7 @@ const Header: React.FC = () => {
           <img 
             src="/lovable-uploads/c127466c-6a9e-4bef-bb44-66895ef039fb.png"
             alt="FreelaAV" 
-            className="h-12 w-auto object-contain max-w-[200px]"
+            className="h-10 w-auto"
             onError={(e) => {
               console.error('Failed to load logo');
               e.currentTarget.style.display = 'none';
