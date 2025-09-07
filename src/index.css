@@ -175,15 +175,15 @@
 
   /* Material Design 3 Surface variants */
   .surface-elevated {
-    @apply shadow-elevation-1;
+    box-shadow: var(--elevation-1);
   }
 
   .surface-elevated-2 {
-    @apply shadow-elevation-2;
+    box-shadow: var(--elevation-2);
   }
 
   .surface-elevated-3 {
-    @apply shadow-elevation-3;
+    box-shadow: var(--elevation-3);
   }
 
   /* Modern button states */
@@ -192,7 +192,8 @@
   }
 
   .button-elevated {
-    @apply shadow-elevation-1 hover:shadow-elevation-2 transition-shadow;
+    box-shadow: var(--elevation-1);
+    @apply hover:shadow-lg transition-shadow;
   }
 
   .button-subtle {

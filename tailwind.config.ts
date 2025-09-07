@@ -72,6 +72,21 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
+			boxShadow: {
+				'elevation-1': 'var(--elevation-1)',
+				'elevation-2': 'var(--elevation-2)',
+				'elevation-3': 'var(--elevation-3)',
+				'elevation-4': 'var(--elevation-4)',
+				'elevation-5': 'var(--elevation-5)',
+				'glass': 'var(--shadow-glass)',
+				'neo-light': 'var(--neo-shadow-light)',
+				'neo-dark': 'var(--neo-shadow-dark)',
+			},
+			backdropBlur: {
+				'glass-sm': 'var(--blur-sm)',
+				'glass-md': 'var(--blur-md)',
+				'glass-lg': 'var(--blur-lg)',
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
