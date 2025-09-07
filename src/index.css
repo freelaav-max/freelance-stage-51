@@ -52,6 +52,25 @@
     --shadow-elegant: 0 10px 30px -10px hsl(285 85% 60% / 0.3);
     --shadow-glow: 0 0 40px hsl(285 85% 60% / 0.4);
     --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.3);
+    
+    /* Material Design 3 Elevation */
+    --elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 1px rgb(0 0 0 / 0.15);
+    --elevation-2: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 2px 6px 2px rgb(0 0 0 / 0.15);
+    --elevation-3: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 4px 8px 3px rgb(0 0 0 / 0.15);
+    --elevation-4: 0 2px 3px 0 rgb(0 0 0 / 0.3), 0 6px 10px 4px rgb(0 0 0 / 0.15);
+    --elevation-5: 0 4px 4px 0 rgb(0 0 0 / 0.3), 0 8px 12px 6px rgb(0 0 0 / 0.15);
+    
+    /* Glass and Neumorphism */
+    --glass-bg: hsla(var(--background), 0.08);
+    --glass-border: hsla(var(--foreground), 0.1);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --neo-shadow-light: 5px 5px 10px hsla(var(--background), 0.3);
+    --neo-shadow-dark: -5px -5px 10px hsla(var(--foreground), 0.05);
+    
+    /* Blur values */
+    --blur-sm: 4px;
+    --blur-md: 8px;
+    --blur-lg: 12px;
 
     /* Safe area and mobile */
     --header-height: 4rem;
@@ -119,6 +138,66 @@
 }
 
 @layer components {
+  /* Modern UI Utilities */
+  .glass-card {
+    @apply bg-[var(--glass-bg)] backdrop-blur-[var(--blur-md)] border border-[var(--glass-border)] shadow-[var(--shadow-glass)] rounded-lg;
+  }
+
+  .neo-card {
+    @apply rounded-lg shadow-[var(--neo-shadow-light),var(--neo-shadow-dark)] bg-card;
+  }
+
+  .pressable {
+    @apply transition-transform duration-150 ease-out active:scale-[0.98];
+  }
+
+  .focus-ring-strong {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::before {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent;
+  }
+
+  /* Floating label animation */
+  .floating-label {
+    @apply absolute left-3 top-2.5 text-sm text-muted-foreground transition-all duration-200 ease-out pointer-events-none;
+  }
+
+  .floating-label-active {
+    @apply -translate-y-6 scale-75 text-primary;
+  }
+
+  /* Material Design 3 Surface variants */
+  .surface-elevated {
+    @apply shadow-elevation-1;
+  }
+
+  .surface-elevated-2 {
+    @apply shadow-elevation-2;
+  }
+
+  .surface-elevated-3 {
+    @apply shadow-elevation-3;
+  }
+
+  /* Modern button states */
+  .button-tonal {
+    @apply bg-secondary/20 text-secondary hover:bg-secondary/30;
+  }
+
+  .button-elevated {
+    @apply shadow-elevation-1 hover:shadow-elevation-2 transition-shadow;
+  }
+
+  .button-subtle {
+    @apply bg-transparent hover:bg-accent/50;
+  }
   /* Hero Section */
   .hero-gradient {
     background: var(--gradient-hero);

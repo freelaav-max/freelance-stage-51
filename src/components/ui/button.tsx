@@ -21,6 +21,9 @@ const buttonVariants = cva(
         premium: "bg-gradient-primary text-white border-0 hover:opacity-90 transition-opacity shadow-lg",
         hero: "bg-card/10 text-foreground border border-border/20 hover:bg-card/20 backdrop-blur-sm",
         success: "bg-success text-success-foreground hover:bg-success/90",
+        tonal: "button-tonal pressable focus-ring-strong",
+        elevated: "button-elevated pressable focus-ring-strong",
+        subtle: "button-subtle pressable focus-ring-strong",
       },
       size: {
         default: "h-10 px-4 py-2",

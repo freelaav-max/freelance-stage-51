@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { MotionProvider } from "@/components/ui/motion-wrapper";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import FreelancerProfile from "./pages/FreelancerProfile";
@@ -37,9 +38,10 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <div className="min-h-screen bg-background text-foreground">
+      <MotionProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <div className="min-h-screen bg-background text-foreground">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -63,11 +65,12 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </div>
-          <Toaster />
-          <Sonner />
-        </AuthProvider>
-      </BrowserRouter>
+            </div>
+            <Toaster />
+            <Sonner />
+          </AuthProvider>
+        </BrowserRouter>
+      </MotionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

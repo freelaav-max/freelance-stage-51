@@ -9,6 +9,7 @@ import { getAvatarUrl, getPortfolioImageUrl } from '@/lib/storage';
 import { MapPin, Star, Heart, Camera, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MobileOfferSheet from '@/components/MobileOfferSheet';
+import { MotionCard } from '@/components/ui/motion-wrapper';
 
 interface FreelancerCardProps {
   freelancer: FreelancerSearchResult;
@@ -45,10 +46,13 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
   };
 
   return (
-    <Card className={cn(
-      "group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
-      is_pro_member && "ring-2 ring-primary/20 shadow-lg"
-    )}>
+    <MotionCard
+      className={cn(
+        "group relative overflow-hidden pressable focus-ring-strong surface-elevated",
+        is_pro_member ? "glass-card ring-2 ring-primary/20" : "bg-card border border-border text-card-foreground shadow-sm rounded-lg"
+      )}
+      interactive={true}
+    >
       {/* Pro Badge */}
       {is_pro_member && (
         <div className="absolute top-3 right-3 z-10">
@@ -159,12 +163,12 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
               Ver Perfil
             </Link>
           </Button>
-          <Button variant="outline" size="icon" className="shrink-0 min-h-11 min-w-11" aria-label="Favoritar">
+          <Button variant="outline" size="icon" className="shrink-0 min-h-11 min-w-11 pressable focus-ring-strong" aria-label="Favoritar freelancer">
             <Heart className="w-4 h-4" />
           </Button>
         </div>
       </CardFooter>
-    </Card>
+    </MotionCard>
   );
 };
 
