@@ -14,10 +14,33 @@ serve(async (req) => {
   }
 
   try {
+    // Get authenticated user
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader }
+        }
+      }
     )
+
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // Get user ID from request body
     const { userId } = await req.json()
@@ -30,9 +53,36 @@ serve(async (req) => {
       )
     }
 
+    // Verify user can only access their own data or public profile data
+    if (userId !== user.id) {
+      // For other users, only return public profile data
+      const { data: profile, error: profileError } = await supabase
+        .rpc('get_public_profile_data', { profile_id: userId })
+        .single()
+
+      if (profileError) {
+        console.error('Error fetching public profile:', profileError)
+        return new Response(
+          JSON.stringify({ error: 'User not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify(profile),
+        { 
+          status: 200, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      )
+    }
+
     console.log('Fetching user data for:', userId)
 
-    // Get user profile with phone and WhatsApp preferences
+    // Get user's own complete profile data
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id, full_name, email, phone, whatsapp_notification_opt_in, user_type, city, state')

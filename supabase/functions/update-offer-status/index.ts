@@ -12,25 +12,71 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Get authenticated user
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader }
+        }
+      }
     )
 
-    const { offer_id, user_id, status, rejection_reason, counter_price } = await req.json()
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // Update offer status
-    const { data: offer, error: offerError } = await supabaseClient
+    const { offer_id, status, rejection_reason, counter_price } = await req.json()
+
+    // First verify user has permission to update this offer
+    const { data: offerCheck, error: checkError } = await supabase
+      .from('offers')
+      .select('client_id, freelancer_id')
+      .eq('id', offer_id)
+      .single()
+
+    if (checkError || !offerCheck) {
+      return new Response(
+        JSON.stringify({ error: 'Offer not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (offerCheck.client_id !== user.id && offerCheck.freelancer_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: you can only update offers you are involved in' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Update offer status using user's permissions
+    const { data: offer, error: offerError } = await supabase
       .from('offers')
       .update({ 
         status,
+        rejection_reason,
+        counter_price,
         updated_at: new Date().toISOString()
       })
       .eq('id', offer_id)
       .select(`
         *,
-        client:profiles!offers_client_id_fkey(full_name, email, phone, whatsapp_notification_opt_in),
-        freelancer:profiles!offers_freelancer_id_fkey(full_name, email, phone, whatsapp_notification_opt_in)
+        client:profiles!offers_client_id_fkey(full_name, email),
+        freelancer:profiles!offers_freelancer_id_fkey(full_name, email)
       `)
       .single()
 
@@ -38,9 +84,26 @@ serve(async (req) => {
       throw offerError
     }
 
+    // Use service role only for webhook notification check
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     // Determine who should receive the notification (the other party)
-    const isClientAction = offer.client_id === user_id
-    const notificationTarget = isClientAction ? offer.freelancer : offer.client
+    const isClientAction = offer.client_id === user.id
+    const recipientId = isClientAction ? offer.freelancer_id : offer.client_id
+
+    // Get recipient's notification preferences
+    const { data: notificationTarget, error: targetError } = await serviceSupabase
+      .from('profiles')
+      .select('full_name, email, phone, whatsapp_notification_opt_in')
+      .eq('id', recipientId)
+      .single()
+
+    if (targetError) {
+      console.error('Error fetching notification target:', targetError)
+    }
 
     // Trigger webhook to n8n if user has opted in for WhatsApp notifications
     if (notificationTarget?.whatsapp_notification_opt_in && notificationTarget?.phone) {

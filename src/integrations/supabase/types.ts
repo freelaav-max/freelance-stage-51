@@ -645,6 +645,17 @@ export type Database = {
           total_reviews: number
         }[]
       }
+      get_public_profile_data: {
+        Args: { profile_id: string }
+        Returns: {
+          avatar_url: string
+          city: string
+          full_name: string
+          id: string
+          state: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }[]
+      }
     }
     Enums: {
       availability_status: "available" | "unavailable" | "partially_available"

@@ -12,19 +12,70 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Get authenticated user
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader }
+        }
+      }
     )
 
-    const { offer_id, sender_id, receiver_id, content } = await req.json()
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // Insert message
-    const { data: message, error: messageError } = await supabaseClient
+    const { offer_id, receiver_id, content } = await req.json()
+
+    // Verify user has permission to send messages for this offer
+    const { data: offerCheck, error: checkError } = await supabase
+      .from('offers')
+      .select('client_id, freelancer_id')
+      .eq('id', offer_id)
+      .single()
+
+    if (checkError || !offerCheck) {
+      return new Response(
+        JSON.stringify({ error: 'Offer not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (offerCheck.client_id !== user.id && offerCheck.freelancer_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: you can only send messages for offers you are involved in' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (receiver_id !== offerCheck.client_id && receiver_id !== offerCheck.freelancer_id) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid receiver: receiver must be involved in the offer' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Insert message using user's permissions
+    const { data: message, error: messageError } = await supabase
       .from('messages')
       .insert({
         offer_id,
-        sender_id,
+        sender_id: user.id,
         receiver_id,
         content,
         sent_at: new Date().toISOString()
@@ -32,7 +83,7 @@ serve(async (req) => {
       .select(`
         *,
         sender:profiles!messages_sender_id_fkey(full_name, email),
-        receiver:profiles!messages_receiver_id_fkey(full_name, email, phone, whatsapp_notification_opt_in),
+        receiver:profiles!messages_receiver_id_fkey(full_name, email),
         offer:offers(title, client_id, freelancer_id)
       `)
       .single()
@@ -41,10 +92,16 @@ serve(async (req) => {
       throw messageError
     }
 
+    // Use service role only for webhook notification check
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     // Get receiver's WhatsApp opt-in status
-    const { data: receiverProfile, error: profileError } = await supabaseClient
+    const { data: receiverProfile, error: profileError } = await serviceSupabase
       .from('profiles')
-      .select('whatsapp_notification_opt_in, phone')
+      .select('whatsapp_notification_opt_in, phone, full_name')
       .eq('id', receiver_id)
       .single()
 
@@ -63,10 +120,10 @@ serve(async (req) => {
           offer_id: offer_id,
           offer_title: message.offer.title,
           sender_name: message.sender.full_name,
-          receiver_name: message.receiver.full_name,
+          receiver_name: receiverProfile.full_name,
           content: content,
           recipient: {
-            name: message.receiver.full_name,
+            name: receiverProfile.full_name,
             phone: receiverProfile.phone,
             email: message.receiver.email
           },
