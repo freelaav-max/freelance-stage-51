@@ -8,6 +8,7 @@ import { FreelancerSearchResult } from '@/hooks/useFreelancerSearch';
 import { getAvatarUrl, getPortfolioImageUrl } from '@/lib/storage';
 import { MapPin, Star, Heart, Camera, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import MobileOfferSheet from '@/components/MobileOfferSheet';
 
 interface FreelancerCardProps {
   freelancer: FreelancerSearchResult;
@@ -119,6 +120,8 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
                   <ImageWithFallback
                     src={getPortfolioImageUrl(item.thumbnail_url || item.media_url)}
                     alt={item.title}
+                    loading="lazy"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
@@ -147,12 +150,16 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
 
       <CardFooter className="p-4 pt-0">
         <div className="flex gap-2 w-full">
-          <Button asChild className="flex-1">
+          <MobileOfferSheet 
+            freelancerId={id} 
+            specialty={specialties[0] || 'audiovisual'}
+          />
+          <Button asChild variant="outline" className="flex-1">
             <Link to={`/freelancer/${id}`}>
               Ver Perfil
             </Link>
           </Button>
-          <Button variant="outline" size="icon" className="shrink-0">
+          <Button variant="outline" size="icon" className="shrink-0 min-h-11 min-w-11" aria-label="Favoritar">
             <Heart className="w-4 h-4" />
           </Button>
         </div>

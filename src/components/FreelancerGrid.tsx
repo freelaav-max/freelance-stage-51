@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Calendar, Heart, MessageCircle } from "lucide-react";
+import FreelancerCarousel from '@/components/FreelancerCarousel';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const freelancers = [
   {
@@ -91,6 +93,8 @@ const freelancers = [
 ];
 
 const FreelancerGrid = () => {
+  const isMobile = useIsMobile();
+
   return (
     <section className="py-16">
       <div className="container">
@@ -104,13 +108,39 @@ const FreelancerGrid = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {isMobile ? (
+          <div className="mb-12">
+            <FreelancerCarousel freelancers={freelancers.map(f => ({
+              id: f.id.toString(),
+              hourly_rate: parseInt(f.price.replace(/\D/g, '')),
+              experience_years: 5,
+              rating: f.rating,
+              total_reviews: f.reviews,
+              is_pro_member: f.pro,
+              specialties: [f.specialty],
+              portfolio: [],
+              bio: f.description,
+              total_jobs: 0,
+              user: {
+                id: f.id.toString(),
+                full_name: f.name,
+                email: '',
+                avatar_url: f.image,
+                city: f.location.split(',')[0],
+                state: f.location.split(',')[1]?.trim()
+              }
+            }))} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {freelancers.map((freelancer) => (
             <div key={freelancer.id} className="freelancer-card group">
               <div className="relative mb-4">
                 <img
                   src={freelancer.image}
                   alt={freelancer.name}
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 33vw"
                   className="w-20 h-20 rounded-full object-cover mx-auto"
                 />
                 {freelancer.pro && (
@@ -182,7 +212,8 @@ const FreelancerGrid = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
         
         <div className="text-center">
           <Button variant="outline" size="lg">

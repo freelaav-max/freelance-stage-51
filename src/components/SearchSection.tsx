@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, DollarSign, Search } from "lucide-react";
 import { SPECIALTIES } from "@/lib/freelancer";
+import { SearchDatePicker } from "@/components/SearchDatePicker";
 
 const BRAZILIAN_CITIES = [
   'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Brasília', 
@@ -25,7 +26,7 @@ const SearchSection = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [city, setCity] = useState("");
-  const [availableDate, setAvailableDate] = useState("");
+  const [availableDate, setAvailableDate] = useState<Date | undefined>();
   const [priceRange, setPriceRange] = useState("");
 
   const handleSearch = () => {
@@ -34,7 +35,7 @@ const SearchSection = () => {
     if (searchTerm) params.set('q', searchTerm);
     if (specialty) params.set('specialty', specialty);
     if (city) params.set('city', city);
-    if (availableDate) params.set('date', availableDate);
+    if (availableDate) params.set('date', availableDate.toISOString().split('T')[0]);
     if (priceRange) {
       const [min, max] = priceRange.split('-');
       if (min) params.set('minPrice', min);
@@ -119,11 +120,10 @@ const SearchSection = () => {
                 <Calendar className="w-4 h-4" />
                 Data
               </label>
-              <Input
-                type="date"
-                value={availableDate}
-                onChange={(e) => setAvailableDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+              <SearchDatePicker
+                date={availableDate}
+                onDateChange={setAvailableDate}
+                placeholder="Selecionar data"
                 className="w-full"
               />
             </div>

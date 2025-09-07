@@ -26,8 +26,8 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top">
+      <div className="container mx-auto px-4 py-2 md:py-4 flex justify-between items-center">
         <div 
           className="flex items-center cursor-pointer" 
           onClick={() => navigate('/')}
@@ -78,7 +78,7 @@ const Header: React.FC = () => {
           
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="p-2">
+              <Button variant="ghost" className="p-3 min-h-11 min-w-11">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>

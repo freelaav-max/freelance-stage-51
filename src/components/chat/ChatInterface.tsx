@@ -157,8 +157,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }
 
   return (
-    <Card className="h-[500px] flex flex-col">
-      <CardHeader className="pb-3">
+    <Card className="h-[500px] md:h-[70vh] min-h-[calc(100dvh-var(--header-height,4rem)-var(--safe-area-bottom,0px))] md:min-h-0 flex flex-col">
+      <CardHeader className="pb-3 shrink-0">
         <CardTitle className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
             <AvatarImage src={getAvatarUrl(receiverAvatar)} alt={receiverName} />
@@ -168,9 +168,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Messages Area */}
-        <ScrollArea className="flex-1 px-4">
+        <ScrollArea className="flex-1 px-4 min-h-0">
           <div className="space-y-4 py-4">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
@@ -211,7 +211,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </ScrollArea>
 
         {/* Message Input */}
-        <div className="border-t p-4">
+        <div className="border-t p-4 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
               <FormField
@@ -236,7 +236,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               />
               <Button 
                 type="submit" 
-                size="icon"
+                className="min-h-11 min-w-11 p-3"
                 disabled={sendMessageMutation.isPending || !form.watch('content')?.trim()}
               >
                 <Send className="h-4 w-4" />
