@@ -73,7 +73,7 @@ const SearchSection = () => {
                 Buscar
               </label>
               <Input
-                placeholder="Ex: cinegrafista experiente"
+                placeholder="Busque por especialidade, cidade ou data (ex.: técnico de som, SP, 10/10)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={handleKeyPress}

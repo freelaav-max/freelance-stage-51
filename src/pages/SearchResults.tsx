@@ -11,7 +11,7 @@ import { useFreelancerSearch, SearchFilters as ISearchFilters } from '@/hooks/us
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, SlidersHorizontal } from 'lucide-react';
+import { Loader2, SlidersHorizontal, Shield, FileText, MessageCircle, UserCheck } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const SearchResults = () => {
@@ -113,6 +113,30 @@ const SearchResults = () => {
       <Header />
       
       
+      {/* Trust Indicators Bar */}
+      <div className="bg-primary/5 border-b">
+        <div className="container py-4">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-primary" />
+              <span>Talentos Verificados</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />
+              <span>Pagamento Seguro</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <span>Contratos Digitais</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-primary" />
+              <span>WhatsApp Integrado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <SearchResultsBar
         filters={currentFilters}
         onFiltersChange={handleFilterChange}
@@ -153,7 +177,10 @@ const SearchResults = () => {
             </div>
           ) : results.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum freelancer encontrado com os filtros selecionados.</p>
+              <p className="text-muted-foreground mb-2">Nada por aqui ainda — ajuste os filtros ou tente outra data</p>
+              <p className="text-sm text-muted-foreground/70 mb-4">
+                Dica: Tente ampliar o raio, ajustar data ou especialidade
+              </p>
               <Button 
                 onClick={() => {
                   reset();

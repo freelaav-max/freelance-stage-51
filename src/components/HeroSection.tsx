@@ -1,8 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Star, Users, Calendar } from "lucide-react";
+import { Play, Star, Users, Calendar, Search, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MotionWrapper } from "@/components/ui/motion-wrapper";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -13,40 +14,59 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left fade-in">
             <Badge className="mb-4 bg-white/20 text-primary border-0">
-              🚀 A Maior Plataforma de Freelancers Audiovisuais
+              🎬 Marketplace de Freelancers de Áudio e Vídeo
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Conecte-se com os{" "}
+              Marketplace de{" "}
               <span className="bg-gradient-primary bg-clip-text text-transparent">
-                Melhores Profissionais
-              </span>{" "}
-              de Áudio e Vídeo
+                Freelancers de Áudio e Vídeo
+              </span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
-              Para freelancers: encontre trabalhos incríveis e gerencie sua carreira.
-              Para clientes: contrate profissionais qualificados com segurança e agilidade.
+              Conecte clientes e profissionais com pagamentos protegidos, contratos digitais e comunicação integrada.
             </p>
+            
+            {/* Value Proposition for Each Persona */}
+            <div className="space-y-4 mb-8">
+              <MotionWrapper preset="fadeIn" className="glass-card p-4 rounded-lg">
+                <p className="text-lg font-medium">
+                  <span className="text-primary">Para clientes:</span> encontre e contrate com segurança em minutos.
+                </p>
+              </MotionWrapper>
+              <MotionWrapper preset="fadeIn" className="glass-card p-4 rounded-lg">
+                <p className="text-lg font-medium">
+                  <span className="text-primary">Para freelancers:</span> tenha visibilidade, negocie e receba com proteção.
+                </p>
+              </MotionWrapper>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" variant="premium" className="text-lg px-8" onClick={() => navigate('/auth')}>
-                Começar Agora
+              <Button size="lg" variant="premium" className="text-lg px-8" onClick={() => navigate('/search')}>
+                <Search className="w-5 h-5 mr-2" />
+                Buscar Profissionais
               </Button>
-              <Button size="lg" variant="hero" className="text-lg px-8" onClick={() => navigate('/como-funciona')}>
-                Como Funciona
+              <Button size="lg" variant="hero" className="text-lg px-8" onClick={() => navigate('/auth')}>
+                <UserPlus className="w-5 h-5 mr-2" />
+                Criar Perfil Grátis
               </Button>
             </div>
             
-            <div className="flex items-center justify-center lg:justify-start gap-8 mt-12">
-              <div className="text-center">
-                <div className="stat-number">2.5k+</div>
-                <p className="text-sm text-muted-foreground">Freelancers</p>
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mt-12">
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="bg-primary/10 text-primary">✓</Badge>
+                <span>Talentos verificados</span>
               </div>
-              <div className="text-center">
-                <div className="stat-number">1.2k+</div>
-                <p className="text-sm text-muted-foreground">Projetos</p>
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="bg-primary/10 text-primary">✓</Badge>
+                <span>Pagamento seguro</span>
               </div>
-              <div className="text-center">
-                <div className="stat-number">4.9</div>
-                <p className="text-sm text-muted-foreground">Avaliação</p>
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="bg-primary/10 text-primary">✓</Badge>
+                <span>Contratos digitais</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="bg-primary/10 text-primary">✓</Badge>
+                <span>WhatsApp integrado</span>
               </div>
             </div>
           </div>
