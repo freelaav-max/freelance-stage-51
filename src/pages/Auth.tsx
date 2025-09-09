@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Logo } from '@/components/brand/Logo';
+import freelaavLogo from '@/assets/freelaav-logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -255,7 +255,14 @@ const Auth = () => {
         <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm neon-glow">
           <CardHeader className="text-center">
             <div className="w-16 h-16 rounded-lg bg-gradient-primary flex items-center justify-center mx-auto mb-4 p-2">
-              <Logo size="lg" />
+              <img 
+                src="/lovable-uploads/c127466c-6a9e-4bef-bb44-66895ef039fb.png" 
+                alt="FreelaAV" 
+                className="w-full h-full object-contain" 
+                onError={(e) => {
+                  e.currentTarget.src = freelaavLogo;
+                }}
+              />
             </div>
             <CardTitle className="text-2xl font-heading text-primary">FreelaAV</CardTitle>
             <CardDescription className="text-muted-foreground">
