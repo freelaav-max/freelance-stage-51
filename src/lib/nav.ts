@@ -18,13 +18,7 @@ export function getNavigationConfig(
   user: User | null
 ): NavigationConfig {
   // Base navigation for all users
-  const baseNav: NavItem[] = [
-    {
-      title: "Como Funciona",
-      href: "/como-funciona",
-      description: "Entenda como usar a plataforma"
-    }
-  ];
+  const baseNav: NavItem[] = [];
 
   // Guest navigation (not logged in)
   if (!user) {
