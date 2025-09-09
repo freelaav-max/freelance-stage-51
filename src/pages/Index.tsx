@@ -2,8 +2,9 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import SearchSection from "@/components/SearchSection";
-import FreelancerGrid from "@/components/FreelancerGrid";
+import FeaturedSpecialtiesSection from "@/components/FeaturedSpecialtiesSection";
 import HowItWorks from "@/components/HowItWorks";
+import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import { DemoAccessButton } from "@/components/DemoAccessButton";
 
@@ -14,8 +15,9 @@ const Index = () => {
       <main>
         <HeroSection />
         <SearchSection />
-        <FreelancerGrid />
+        <FeaturedSpecialtiesSection />
         <HowItWorks />
+        <CTASection />
       </main>
       <Footer />
       <DemoAccessButton />

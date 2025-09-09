@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Star, Users, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
@@ -27,98 +26,21 @@ const HeroSection = () => {
               Para clientes: contrate profissionais qualificados com segurança e agilidade.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" variant="premium" className="text-lg px-8" onClick={() => navigate('/auth')}>
-                Começar Agora
+              <Button size="lg" variant="premium" className="text-lg px-8" onClick={() => navigate('/search')}>
+                Buscar Profissionais
               </Button>
-              <Button size="lg" variant="hero" className="text-lg px-8" onClick={() => navigate('/como-funciona')}>
-                Como Funciona
+              <Button size="lg" variant="hero" className="text-lg px-8" onClick={() => navigate('/auth')}>
+                Cadastre-se Agora
               </Button>
-            </div>
-            
-            <div className="flex items-center justify-center lg:justify-start gap-8 mt-12">
-              <div className="text-center">
-                <div className="stat-number">2.5k+</div>
-                <p className="text-sm text-muted-foreground">Freelancers</p>
-              </div>
-              <div className="text-center">
-                <div className="stat-number">1.2k+</div>
-                <p className="text-sm text-muted-foreground">Projetos</p>
-              </div>
-              <div className="text-center">
-                <div className="stat-number">4.9</div>
-                <p className="text-sm text-muted-foreground">Avaliação</p>
-              </div>
             </div>
           </div>
           
           <div className="relative slide-up">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="freelancer-card">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-primary"></div>
-                    <div>
-                      <h3 className="font-semibold">Carlos Silva</h3>
-                      <p className="text-sm text-muted-foreground">Cinegrafista</p>
-                    </div>
-                  </div>
-                  <div className="rating-stars mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
-                  <Badge className="badge-specialty">São Paulo</Badge>
-                </div>
-                
-                <div className="freelancer-card">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-secondary"></div>
-                    <div>
-                      <h3 className="font-semibold">Ana Costa</h3>
-                      <p className="text-sm text-muted-foreground">Técnica de Som</p>
-                    </div>
-                  </div>
-                  <div className="rating-stars mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
-                  <Badge className="badge-pro">PRO</Badge>
-                </div>
-              </div>
-              
-              <div className="space-y-4 mt-8">
-                <div className="freelancer-card">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-primary"></div>
-                    <div>
-                      <h3 className="font-semibold">João Santos</h3>
-                      <p className="text-sm text-muted-foreground">Iluminador</p>
-                    </div>
-                  </div>
-                  <div className="rating-stars mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
-                  <Badge className="badge-specialty">Rio de Janeiro</Badge>
-                </div>
-                
-                <div className="freelancer-card">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-secondary"></div>
-                    <div>
-                      <h3 className="font-semibold">Maria Oliveira</h3>
-                      <p className="text-sm text-muted-foreground">VJ / Motion</p>
-                    </div>
-                  </div>
-                  <div className="rating-stars mb-2">
-                    {[...Array(4)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                    <Star className="w-4 h-4" />
-                  </div>
-                  <Badge className="badge-specialty">Belo Horizonte</Badge>
+            <div className="flex items-center justify-center">
+              <div className="w-full max-w-md h-64 rounded-lg bg-gradient-primary/20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Conecte-se com profissionais qualificados</p>
                 </div>
               </div>
             </div>

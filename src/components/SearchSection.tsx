@@ -1,25 +1,19 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, DollarSign, Search } from "lucide-react";
-import { SPECIALTIES } from "@/lib/freelancer";
 import { SearchDatePicker } from "@/components/SearchDatePicker";
+import { supabase } from "@/integrations/supabase/client";
+import { getSpecialtyLabel } from "@/lib/specialty-translations";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const BRAZILIAN_CITIES = [
-  'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Brasília', 
-  'Fortaleza', 'Curitiba', 'Recife', 'Porto Alegre', 'Manaus'
-];
-
-const POPULAR_SEARCHES = [
-  { label: 'Casamentos', specialty: 'cinegrafista' },
-  { label: 'Eventos Corporativos', specialty: 'tecnico-som' },
-  { label: 'Shows', specialty: 'iluminador' },
-  { label: 'Streaming', specialty: 'operador-camera' }
-];
+interface Specialty {
+  value: string;
+  label: string;
+}
 
 const SearchSection = () => {
   const navigate = useNavigate();
@@ -28,6 +22,37 @@ const SearchSection = () => {
   const [city, setCity] = useState("");
   const [availableDate, setAvailableDate] = useState<Date | undefined>();
   const [priceRange, setPriceRange] = useState("");
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [loadingSpecialties, setLoadingSpecialties] = useState(true);
+  const [specialtyError, setSpecialtyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('freelancer_specialties')
+          .select('specialty');
+        
+        if (error) throw error;
+        
+        // Deduplicate and transform to label format
+        const uniqueSpecialties = Array.from(new Set(data.map(item => item.specialty)))
+          .map(value => ({
+            value,
+            label: getSpecialtyLabel(value as any)
+          }));
+        
+        setSpecialties(uniqueSpecialties);
+      } catch (error) {
+        setSpecialtyError('Erro ao carregar especialidades');
+        console.error('Error fetching specialties:', error);
+      } finally {
+        setLoadingSpecialties(false);
+      }
+    };
+
+    fetchSpecialties();
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -45,11 +70,6 @@ const SearchSection = () => {
     navigate(`/search?${params.toString()}`);
   };
 
-  const handlePopularSearch = (popularSearch: typeof POPULAR_SEARCHES[0]) => {
-    const params = new URLSearchParams();
-    params.set('specialty', popularSearch.specialty);
-    navigate(`/search?${params.toString()}`);
-  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -86,16 +106,24 @@ const SearchSection = () => {
                 <Search className="w-4 h-4" />
                 Especialidade
               </label>
-              <Select value={specialty} onValueChange={setSpecialty}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar área" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SPECIALTIES.map((spec) => (
-                    <SelectItem key={spec.value} value={spec.value}>{spec.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {loadingSpecialties ? (
+                <Skeleton className="h-10 w-full" />
+              ) : specialtyError ? (
+                <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground">
+                  {specialtyError}
+                </div>
+              ) : (
+                <Select value={specialty} onValueChange={setSpecialty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specialties.map((spec) => (
+                      <SelectItem key={spec.value} value={spec.value}>{spec.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -103,16 +131,13 @@ const SearchSection = () => {
                 <MapPin className="w-4 h-4" />
                 Localização
               </label>
-              <Select value={city} onValueChange={setCity}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Cidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BRAZILIAN_CITIES.map((cityName) => (
-                    <SelectItem key={cityName} value={cityName}>{cityName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="Ex: São Paulo, SP"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full"
+              />
             </div>
             
             <div className="space-y-2">
@@ -167,19 +192,6 @@ const SearchSection = () => {
             </Button>
           </div>
           
-          <div className="flex flex-wrap gap-2 mt-4">
-            <span className="text-sm text-muted-foreground mr-2">Popular:</span>
-            {POPULAR_SEARCHES.map((search) => (
-              <Badge 
-                key={search.label}
-                variant="secondary" 
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                onClick={() => handlePopularSearch(search)}
-              >
-                {search.label}
-              </Badge>
-            ))}
-          </div>
         </div>
       </div>
     </section>
