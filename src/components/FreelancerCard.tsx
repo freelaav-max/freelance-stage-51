@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { FreelancerSearchResult } from '@/hooks/useFreelancerSearch';
 import { getAvatarUrl, getPortfolioImageUrl } from '@/lib/storage';
-import { MapPin, Star, Heart, Camera, Crown, Shield, CheckCircle } from 'lucide-react';
+import { MapPin, Star, Heart, Camera, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MobileOfferSheet from '@/components/MobileOfferSheet';
 import { MotionCard } from '@/components/ui/motion-wrapper';
@@ -53,21 +53,15 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
       )}
       interactive={true}
     >
-      {/* Trust Indicators */}
-      <div className="absolute top-3 right-3 z-10 flex gap-2">
-        {/* Verified Badge */}
-        <Badge className="bg-green-100 text-green-700 border-green-200">
-          <Shield className="w-3 h-3 mr-1" />
-          Verificado
-        </Badge>
-        {/* Pro Badge */}
-        {is_pro_member && (
+      {/* Pro Badge */}
+      {is_pro_member && (
+        <div className="absolute top-3 right-3 z-10">
           <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black">
             <Crown className="w-3 h-3 mr-1" />
             PRO
           </Badge>
-        )}
-      </div>
+        </div>
+      )}
 
       <CardContent className="p-4">
         {/* Header com Avatar e Info Básica */}
@@ -103,7 +97,6 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
               <span className="text-sm text-muted-foreground">
                 ({total_reviews} {total_reviews === 1 ? 'avaliação' : 'avaliações'})
               </span>
-              <CheckCircle className="w-4 h-4 text-green-500" />
             </div>
           </div>
         </div>
@@ -160,21 +153,11 @@ const FreelancerCard = ({ freelancer }: FreelancerCardProps) => {
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        {/* Trust Message */}
-        <div className="mb-3 w-full">
-          <p className="text-xs text-muted-foreground text-center">
-            <Shield className="w-3 h-3 inline mr-1" />
-            Pagamento protegido por nossa plataforma
-          </p>
-        </div>
-        
         <div className="flex gap-2 w-full">
-          <div className="flex-1">
-            <MobileOfferSheet 
-              freelancerId={id} 
-              specialty={specialties[0] || 'audiovisual'}
-            />
-          </div>
+          <MobileOfferSheet 
+            freelancerId={id} 
+            specialty={specialties[0] || 'audiovisual'}
+          />
           <Button asChild variant="outline" className="flex-1">
             <Link to={`/freelancer/${id}`}>
               Ver Perfil

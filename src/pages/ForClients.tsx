@@ -26,8 +26,6 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ValuePropStrip from "@/components/ValuePropStrip";
-import Differentials from "@/components/Differentials";
 
 const ForClientsPage = () => {
   const navigate = useNavigate();
@@ -36,12 +34,10 @@ const ForClientsPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <HeroSection />
-      <ValuePropStrip />
       <HowItWorksSection />
       <BenefitsSection />
       <ProfessionalCategoriesSection />
       <ComparisonSection />
-      <Differentials />
       <FAQSection />
       <FinalCTASection />
       <Footer />
@@ -73,7 +69,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Encontre profissionais verificados em minutos
+            Encontre os melhores profissionais de áudio e vídeo
           </motion.h1>
           
           <motion.p 
@@ -82,7 +78,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Filtros por especialidade, disponibilidade e preço. Pagamento protegido e contratos digitais.
+            Contrate técnicos de som, operadores de câmera, iluminadores e outros profissionais qualificados para eventos, produções e projetos de qualquer porte.
           </motion.p>
           
           <motion.div
@@ -97,7 +93,7 @@ const HeroSection = () => {
               onClick={() => navigate('/search')}
             >
               <Search className="mr-2 h-5 w-5" />
-              Buscar Profissionais
+              Buscar profissionais
             </Button>
             <Button 
               size="lg" 

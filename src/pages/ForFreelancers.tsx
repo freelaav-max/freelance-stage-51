@@ -6,11 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ValuePropStrip from "@/components/ValuePropStrip";
-import Differentials from "@/components/Differentials";
-import ProblemSolutionSection from "@/components/ProblemSolutionSection";
-import TangibleBenefitsSection from "@/components/TangibleBenefitsSection";
-import { UserPlus, Calendar, MessageCircle, CreditCard, Search, DollarSign, Star, Shield, CheckCircle, Check, ArrowRight, TrendingUp, Clock, Users } from "lucide-react";
+import { UserPlus, Calendar, MessageCircle, CreditCard, Search, DollarSign, Star, Shield, CheckCircle, Check, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const ForFreelancersPage = () => {
   const navigate = useNavigate();
@@ -18,12 +14,8 @@ const ForFreelancersPage = () => {
       <Header />
       <main>
         <HeroSection navigate={navigate} />
-        <ValuePropStrip />
-        <ProblemSolutionSection />
-        <TangibleBenefitsSection />
         <HowItWorksSection />
         <BenefitsSection />
-        <Differentials />
         <PricingSection navigate={navigate} />
         <FAQSection />
         <FinalCTASection navigate={navigate} />
@@ -69,7 +61,7 @@ const HeroSection: React.FC<{
           duration: 0.6,
           delay: 0.1
         }}>
-            Mais projetos, menos burocracia
+            Expanda sua carreira como freelancer de áudio e vídeo
           </motion.h1>
           
           <motion.p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl" initial={{
@@ -82,7 +74,7 @@ const HeroSection: React.FC<{
           duration: 0.6,
           delay: 0.2
         }}>
-            Visibilidade, fluxo contínuo de oportunidades e pagamentos protegidos em um só lugar.
+            Conecte-se com clientes qualificados, gerencie seus projetos e receba pagamentos de forma segura em uma única plataforma especializada para profissionais de áudio e vídeo.
           </motion.p>
           
           <motion.div className="flex flex-col sm:flex-row gap-4 mb-8" initial={{
@@ -96,7 +88,7 @@ const HeroSection: React.FC<{
           delay: 0.3
         }}>
             <Button size="lg" className="bg-white text-primary hover:bg-white/90" onClick={() => navigate('/auth')}>
-              Criar perfil grátis
+              Criar conta grátis
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">

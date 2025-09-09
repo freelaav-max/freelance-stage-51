@@ -6,7 +6,6 @@ import FreelancerGrid from "@/components/FreelancerGrid";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import { DemoAccessButton } from "@/components/DemoAccessButton";
-import ValuePropStrip from "@/components/ValuePropStrip";
 
 const Index = () => {
   return (
@@ -14,7 +13,6 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <ValuePropStrip />
         <SearchSection />
         <FreelancerGrid />
         <HowItWorks />
