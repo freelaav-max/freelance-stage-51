@@ -4,6 +4,7 @@ import { useInView } from 'react-intersection-observer';
 import { useAuthRequired } from '@/hooks/useAuthRequired';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ReferralSection from '@/components/referrals/ReferralSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -391,6 +392,11 @@ const FreelancerDashboard: React.FC = () => {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Referral Section */}
+          <div className="mt-8">
+            <ReferralSection />
+          </div>
         </motion.div>
       </main>
 

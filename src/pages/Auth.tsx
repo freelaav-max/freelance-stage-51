@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
 import { 
   loginSchema, 
@@ -34,10 +35,70 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const isPasswordReset = searchParams.get('reset') === 'true';
+  const referralCode = searchParams.get('ref');
   
-  // Redirect if already authenticated
+  // Handle referral code from URL
+  useEffect(() => {
+    if (referralCode) {
+      // Save referral code to localStorage
+      localStorage.setItem('referral_code', referralCode);
+      
+      // Increment click count (async operation)
+      const incrementClick = async () => {
+        try {
+          await supabase.rpc('increment_referral_click', { p_code: referralCode });
+        } catch (error) {
+          console.log('Failed to increment referral click:', error);
+        }
+      };
+      incrementClick();
+    }
+  }, [referralCode]);
+
+  // Handle referral link creation after signup
   useEffect(() => {
     if (user) {
+      const savedReferralCode = localStorage.getItem('referral_code');
+      if (savedReferralCode) {
+        // Create referral link
+        const createReferralLink = async () => {
+          try {
+            const { data: referralData } = await supabase
+              .rpc('resolve_referral_code', { p_code: savedReferralCode });
+
+            if (referralData && referralData.length > 0) {
+              const { referrer_id, referral_code_id } = referralData[0];
+              
+              // Check if referral already exists
+              const { data: existingReferral } = await supabase
+                .from('referrals')
+                .select('id')
+                .eq('referred_id', user.id)
+                .single();
+
+              if (!existingReferral) {
+                await supabase
+                  .from('referrals')
+                  .insert({
+                    referrer_id,
+                    referred_id: user.id,
+                    referral_code_id,
+                    status: 'registered'
+                  });
+              }
+            }
+            
+            localStorage.removeItem('referral_code');
+          } catch (error) {
+            console.log('Failed to create referral link:', error);
+            localStorage.removeItem('referral_code');
+          }
+        };
+
+        createReferralLink();
+      }
+
+      // Redirect based on user type
       const userType = user.user_metadata?.user_type;
       if (userType === 'freelancer') {
         navigate('/profile');

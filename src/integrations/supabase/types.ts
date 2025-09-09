@@ -519,6 +519,60 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          clicks: number
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          clicks?: number
+          code: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          clicks?: number
+          code?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code_id: string
+          referred_id: string
+          referrer_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code_id: string
+          referred_id: string
+          referrer_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code_id?: string
+          referred_id?: string
+          referrer_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string | null
@@ -629,6 +683,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_or_create_referral_code: {
+        Args: { p_user_id: string }
+        Returns: {
+          code: string
+        }[]
+      }
       get_public_freelancer_info: {
         Args: { freelancer_id: string }
         Returns: {
@@ -654,6 +714,17 @@ export type Database = {
           id: string
           state: string
           user_type: Database["public"]["Enums"]["user_type"]
+        }[]
+      }
+      increment_referral_click: {
+        Args: { p_code: string }
+        Returns: undefined
+      }
+      resolve_referral_code: {
+        Args: { p_code: string }
+        Returns: {
+          referral_code_id: string
+          referrer_id: string
         }[]
       }
     }
