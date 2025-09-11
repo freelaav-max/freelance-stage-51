@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, MapPin, Clock, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, Shield, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PaymentDisclaimer } from '@/components/PaymentDisclaimer';
 
 interface BookingCreationFlowProps {
   offerId: string;
@@ -19,7 +21,7 @@ interface BookingCreationFlowProps {
 interface BookingData {
   location: string;
   totalAmount: number;
-  depositAmount: number;
+  paymentMethod: string;
   eventDate: string;
   notes?: string;
 }
@@ -36,7 +38,7 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
   const [bookingData, setBookingData] = useState<BookingData>({
     location: '',
     totalAmount: 0,
-    depositAmount: 0,
+    paymentMethod: '',
     eventDate: '',
     notes: '',
   });
@@ -72,7 +74,7 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
           location: bookingData.location,
           event_date: bookingData.eventDate,
           total_amount: bookingData.totalAmount,
-          deposit_amount: bookingData.depositAmount,
+          deposit_amount: 0, // No platform-managed deposits
           status: 'confirmed',
         })
         .select()
@@ -81,15 +83,15 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
       if (bookingError) throw bookingError;
 
       toast({
-        title: "Booking criado com sucesso!",
-        description: "O booking foi criado e o freelancer foi notificado.",
+        title: "Contrato criado com sucesso!",
+        description: "Entre em contato diretamente com o freelancer para acertar os detalhes do pagamento.",
       });
 
       onSuccess?.();
     } catch (error) {
       console.error('Error creating booking:', error);
       toast({
-        title: "Erro ao criar booking",
+        title: "Erro ao criar contrato",
         description: "Tente novamente em alguns instantes",
         variant: "destructive",
       });
@@ -107,8 +109,10 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
+            <PaymentDisclaimer />
+            
             <div className="space-y-2">
-              <Label htmlFor="location">Local do Evento</Label>
+              <Label htmlFor="location">Local do Evento *</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -122,7 +126,7 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="eventDate">Data do Evento</Label>
+              <Label htmlFor="eventDate">Data do Evento *</Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -144,9 +148,9 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="totalAmount">Valor Total (R$)</Label>
+                <Label htmlFor="totalAmount">Valor Acordado (R$)</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -165,33 +169,24 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="depositAmount">Sinal (R$)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="depositAmount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={bookingData.depositAmount || ''}
-                    onChange={(e) => setBookingData(prev => ({ 
-                      ...prev, 
-                      depositAmount: parseFloat(e.target.value) || 0 
-                    }))}
-                    className="pl-10"
-                  />
-                </div>
+                <Label htmlFor="paymentMethod">Forma de Pagamento Combinada</Label>
+                <Input
+                  id="paymentMethod"
+                  placeholder="Ex: PIX, Dinheiro, Transferência"
+                  value={bookingData.paymentMethod}
+                  onChange={(e) => setBookingData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Observações (opcional)</Label>
+              <Label htmlFor="notes">Observações do Contrato</Label>
               <Textarea
                 id="notes"
-                placeholder="Informações adicionais sobre o evento..."
+                placeholder="Detalhes sobre horários, equipamentos, forma de pagamento..."
                 value={bookingData.notes}
                 onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
-                rows={3}
+                rows={4}
               />
             </div>
           </motion.div>
@@ -205,7 +200,7 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
             className="space-y-4"
           >
             <div className="bg-muted p-4 rounded-lg space-y-3">
-              <h4 className="font-semibold">Resumo do Booking</h4>
+              <h4 className="font-semibold">Resumo do Contrato</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Local:</span>
@@ -218,15 +213,23 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Valor Total:</span>
+                  <span>Valor Acordado:</span>
                   <span className="font-medium">R$ {bookingData.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Sinal:</span>
-                  <span className="font-medium">R$ {bookingData.depositAmount.toFixed(2)}</span>
+                  <span>Pagamento:</span>
+                  <span className="font-medium">{bookingData.paymentMethod}</span>
                 </div>
               </div>
             </div>
+            
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Após confirmar, entre em contato diretamente com o freelancer 
+                para acertar todos os detalhes do pagamento e execução do serviço.
+              </AlertDescription>
+            </Alert>
           </motion.div>
         );
 
@@ -240,7 +243,7 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
       case 1:
         return bookingData.location && bookingData.eventDate;
       case 2:
-        return bookingData.totalAmount > 0 && bookingData.depositAmount >= 0;
+        return bookingData.totalAmount > 0;
       case 3:
         return true;
       default:
@@ -252,8 +255,8 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Criar Booking - Etapa {step} de 3
+          <Shield className="h-5 w-5" />
+          Criar Contrato - Etapa {step} de 3
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -294,7 +297,7 @@ export const BookingCreationFlow: React.FC<BookingCreationFlowProps> = ({
               disabled={loading || !canProceed()}
               className="flex-1"
             >
-              {loading ? 'Criando...' : 'Confirmar Booking'}
+              {loading ? 'Criando...' : 'Confirmar Contrato'}
             </Button>
           )}
         </div>

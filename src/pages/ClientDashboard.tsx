@@ -114,7 +114,7 @@ const ClientDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Gasto Total</p>
+                    <p className="text-sm font-medium text-muted-foreground">Valor Total Acordado</p>
                     <p className="text-2xl font-bold">R$ {stats.totalSpent.toLocaleString('pt-BR')}</p>
                   </div>
                   <CreditCard className="h-8 w-8 text-primary" />

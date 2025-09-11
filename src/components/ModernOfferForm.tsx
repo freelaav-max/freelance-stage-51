@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { PaymentDisclaimer } from '@/components/PaymentDisclaimer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -123,6 +124,8 @@ export const ModernOfferForm: React.FC<ModernOfferFormProps> = ({
             Preencha os detalhes abaixo para contratar um freelancer.
           </p>
         </div>
+
+        <PaymentDisclaimer className="mb-6" />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -318,6 +321,9 @@ export const ModernOfferForm: React.FC<ModernOfferFormProps> = ({
                       />
                     </div>
                   </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    O pagamento será acordado diretamente entre você e o freelancer.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
