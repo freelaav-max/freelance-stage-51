@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useAuthRequired } from '@/hooks/useAuthRequired';
+import { useConversations } from '@/hooks/useConversations';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,7 @@ interface Conversation {
 
 const Messages: React.FC = () => {
   const { loading } = useAuthRequired();
+  const { conversations, loading: conversationsLoading } = useConversations();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,94 +60,21 @@ const Messages: React.FC = () => {
     threshold: 0.1,
   });
 
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Carregando...</div>;
+  if (loading || conversationsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <LoadingSpinner />
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  // Mock data
-  const conversations: Conversation[] = [
-    {
-      id: '1',
-      otherUserName: 'Maria Santos',
-      otherUserType: 'client',
-      lastMessage: 'Perfeito! Aguardo confirmação.',
-      lastMessageTime: '10:30',
-      unreadCount: 2,
-      offerDetails: {
-        service: 'Técnico de Som',
-        date: '2025-01-30',
-        location: 'São Paulo - SP',
-        budget: 800,
-        status: 'pending'
-      }
-    },
-    {
-      id: '2',
-      otherUserName: 'Carlos Silva',
-      otherUserType: 'freelancer',
-      lastMessage: 'Obrigado pela oportunidade!',
-      lastMessageTime: 'Ontem',
-      unreadCount: 0,
-      offerDetails: {
-        service: 'Operação de Câmera',
-        date: '2025-02-05',
-        location: 'Rio de Janeiro - RJ',
-        budget: 1200,
-        status: 'accepted'
-      }
-    },
-    {
-      id: '3',
-      otherUserName: 'Ana Costa',
-      otherUserType: 'client',
-      lastMessage: 'Vou analisar sua proposta.',
-      lastMessageTime: '2 dias',
-      unreadCount: 0
-    }
-  ];
-
-  const messages: Record<string, Message[]> = {
-    '1': [
-      {
-        id: '1',
-        senderId: 'other',
-        content: 'Olá! Vi seu perfil e gostaria de contratá-lo para um evento.',
-        timestamp: '09:15',
-        type: 'text'
-      },
-      {
-        id: '2',
-        senderId: 'me',
-        content: 'Olá Maria! Obrigado pelo interesse. Pode me dar mais detalhes sobre o evento?',
-        timestamp: '09:20',
-        type: 'text'
-      },
-      {
-        id: '3',
-        senderId: 'other',
-        content: 'É um evento corporativo para 200 pessoas. Preciso de técnico de som.',
-        timestamp: '09:25',
-        type: 'text'
-      },
-      {
-        id: '4',
-        senderId: 'system',
-        content: 'Nova oferta recebida',
-        timestamp: '09:30',
-        type: 'offer'
-      },
-      {
-        id: '5',
-        senderId: 'other',
-        content: 'Perfeito! Aguardo confirmação.',
-        timestamp: '10:30',
-        type: 'text'
-      }
-    ]
-  };
-
+  // Mock messages for demo - would come from real API
+  const currentMessages: Message[] = [];
   const currentConversation = conversations.find(c => c.id === selectedConversation);
-  const currentMessages = selectedConversation ? messages[selectedConversation] || [] : [];
 
   const sendMessage = () => {
     if (!messageInput.trim() || !selectedConversation) return;
@@ -222,15 +152,13 @@ const Messages: React.FC = () => {
                             <p className="text-sm text-muted-foreground truncate">
                               {conversation.lastMessage}
                             </p>
-                            {conversation.offerDetails && (
-                              <Badge 
-                                variant={conversation.offerDetails.status === 'pending' ? 'default' : 'secondary'} 
-                                className="mt-2"
-                              >
-                                {conversation.offerDetails.status === 'pending' ? 'Oferta Pendente' : 
-                                 conversation.offerDetails.status === 'accepted' ? 'Oferta Aceita' : 'Oferta Recusada'}
-                              </Badge>
-                            )}
+                            <Badge 
+                              variant={conversation.offerDetails.status === 'pending' ? 'default' : 'secondary'} 
+                              className="mt-2"
+                            >
+                              {conversation.offerDetails.status === 'pending' ? 'Oferta Pendente' : 
+                               conversation.offerDetails.status === 'accepted' ? 'Oferta Aceita' : 'Oferta Recusada'}
+                            </Badge>
                           </div>
                         </div>
                       </CardContent>
@@ -285,22 +213,11 @@ const Messages: React.FC = () => {
                                  currentConversation.offerDetails.status === 'accepted' ? 'Aceita' : 'Recusada'}
                               </Badge>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="grid grid-cols-1 gap-2 text-sm">
                               <div className="flex items-center gap-2">
                                 <Badge variant="secondary">{currentConversation.offerDetails.service}</Badge>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <DollarSign className="h-4 w-4" />
-                                R$ {currentConversation.offerDetails.budget.toLocaleString('pt-BR')}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <CalendarDays className="h-4 w-4" />
-                                {new Date(currentConversation.offerDetails.date).toLocaleDateString('pt-BR')}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {currentConversation.offerDetails.location}
-                              </div>
+                              <p className="text-muted-foreground">{currentConversation.offerDetails.title}</p>
                             </div>
                             {currentConversation.offerDetails.status === 'pending' && (
                               <div className="flex gap-2 mt-4">
@@ -317,33 +234,40 @@ const Messages: React.FC = () => {
                   {/* Messages */}
                   <ScrollArea className="flex-1 mb-4">
                     <div className="space-y-4 p-4">
-                      {currentMessages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          {message.type === 'system' ? (
-                            <div className="bg-muted p-3 rounded-lg text-center text-sm">
-                              {message.content}
-                            </div>
-                          ) : (
-                            <div
-                              className={`max-w-[70%] p-3 rounded-lg ${
-                                message.senderId === 'me'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted'
-                              }`}
-                            >
-                              <p>{message.content}</p>
-                              <p className={`text-xs mt-1 ${
-                                message.senderId === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                              }`}>
-                                {message.timestamp}
-                              </p>
-                            </div>
-                          )}
+                      {currentMessages.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          <p>Nenhuma mensagem ainda</p>
+                          <p className="text-sm mt-1">Inicie a conversa!</p>
                         </div>
-                      ))}
+                      ) : (
+                        currentMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {message.type === 'system' ? (
+                              <div className="bg-muted p-3 rounded-lg text-center text-sm">
+                                {message.content}
+                              </div>
+                            ) : (
+                              <div
+                                className={`max-w-[70%] p-3 rounded-lg ${
+                                  message.senderId === 'me'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted'
+                                }`}
+                              >
+                                <p>{message.content}</p>
+                                <p className={`text-xs mt-1 ${
+                                  message.senderId === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                }`}>
+                                  {message.timestamp}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </ScrollArea>
 

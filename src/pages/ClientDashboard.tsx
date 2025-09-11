@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useAuthRequired } from '@/hooks/useAuthRequired';
+import { useClientStats } from '@/hooks/useClientStats';
+import { useClientBookings } from '@/hooks/useClientBookings';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ReferralSection from '@/components/referrals/ReferralSection';
@@ -9,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import {
   CalendarDays,
   Clock,
@@ -25,67 +28,27 @@ import { useNavigate } from 'react-router-dom';
 const ClientDashboard: React.FC = () => {
   const { loading } = useAuthRequired();
   const navigate = useNavigate();
+  const { stats, loading: statsLoading } = useClientStats();
+  const { activeBookings, pastBookings, loading: bookingsLoading } = useClientBookings();
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
 
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Carregando...</div>;
+  if (loading || statsLoading || bookingsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <LoadingSpinner />
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  // Mock data - would come from API
-  const activeBookings = [
-    {
-      id: '1',
-      freelancerName: 'Carlos Silva',
-      service: 'Técnico de Som',
-      date: '2025-01-25',
-      time: '14:00',
-      location: 'São Paulo - SP',
-      status: 'confirmed',
-      amount: 800
-    },
-    {
-      id: '2',
-      freelancerName: 'Ana Rodrigues',
-      service: 'Operadora de Câmera',
-      date: '2025-01-28',
-      time: '09:00',
-      location: 'Rio de Janeiro - RJ',
-      status: 'pending_payment',
-      amount: 1200
-    }
-  ];
-
-  const pastBookings = [
-    {
-      id: '3',
-      freelancerName: 'Marcos Oliveira',
-      service: 'Iluminador',
-      date: '2025-01-15',
-      location: 'Belo Horizonte - MG',
-      status: 'completed',
-      rating: 5
-    }
-  ];
-
-  const favoriteFreelancers = [
-    {
-      id: '1',
-      name: 'Carlos Silva',
-      specialty: 'Técnico de Som',
-      rating: 4.9,
-      location: 'São Paulo - SP'
-    },
-    {
-      id: '2',
-      name: 'Ana Rodrigues',
-      specialty: 'Operadora de Câmera',
-      rating: 5.0,
-      location: 'Rio de Janeiro - RJ'
-    }
-  ];
+  // Placeholder for favorites - will be implemented when user_favorites table is created
+  const favoriteFreelancers: any[] = [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,7 +79,7 @@ const ClientDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Bookings Ativos</p>
-                    <p className="text-2xl font-bold">{activeBookings.length}</p>
+                    <p className="text-2xl font-bold">{stats.activeBookings}</p>
                   </div>
                   <CalendarDays className="h-8 w-8 text-primary" />
                 </div>
@@ -128,7 +91,7 @@ const ClientDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Trabalhos Concluídos</p>
-                    <p className="text-2xl font-bold">{pastBookings.length}</p>
+                    <p className="text-2xl font-bold">{stats.completedBookings}</p>
                   </div>
                   <Clock className="h-8 w-8 text-primary" />
                 </div>
@@ -140,7 +103,7 @@ const ClientDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Freelancers Favoritos</p>
-                    <p className="text-2xl font-bold">{favoriteFreelancers.length}</p>
+                    <p className="text-2xl font-bold">{stats.favoriteFreelancers}</p>
                   </div>
                   <Users className="h-8 w-8 text-primary" />
                 </div>
@@ -152,7 +115,7 @@ const ClientDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Gasto Total</p>
-                    <p className="text-2xl font-bold">R$ 2.000</p>
+                    <p className="text-2xl font-bold">R$ {stats.totalSpent.toLocaleString('pt-BR')}</p>
                   </div>
                   <CreditCard className="h-8 w-8 text-primary" />
                 </div>
@@ -168,105 +131,99 @@ const ClientDashboard: React.FC = () => {
             </TabsList>
 
             <TabsContent value="active" className="space-y-4">
-              {activeBookings.map((booking) => (
-                <Card key={booking.id}>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{booking.freelancerName}</h3>
-                          <Badge variant="secondary">{booking.service}</Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <CalendarDays className="h-4 w-4" />
-                            {new Date(booking.date).toLocaleDateString('pt-BR')} às {booking.time}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {booking.location}
-                          </div>
-                        </div>
-                        <div className="text-lg font-semibold">
-                          R$ {booking.amount.toLocaleString('pt-BR')}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={booking.status === 'confirmed' ? 'default' : 'destructive'}>
-                          {booking.status === 'confirmed' ? 'Confirmado' : 'Pagamento Pendente'}
-                        </Badge>
-                        <Button variant="outline" size="sm">
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+              {activeBookings.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    Nenhum booking ativo no momento
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                activeBookings.map((booking) => (
+                  <Card key={booking.id}>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold">{booking.freelancer.full_name}</h3>
+                            <Badge variant="secondary">{booking.offer.specialty}</Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <CalendarDays className="h-4 w-4" />
+                              {new Date(booking.event_date).toLocaleDateString('pt-BR')}
+                              {booking.offer.event_time && ` às ${booking.offer.event_time}`}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {booking.location}
+                            </div>
+                          </div>
+                          <div className="text-lg font-semibold">
+                            R$ {booking.total_amount.toLocaleString('pt-BR')}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={booking.status === 'confirmed' ? 'default' : 'destructive'}>
+                            {booking.status === 'confirmed' ? 'Confirmado' : 'Pagamento Pendente'}
+                          </Badge>
+                          <Button variant="outline" size="sm">
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </TabsContent>
 
             <TabsContent value="history" className="space-y-4">
-              {pastBookings.map((booking) => (
-                <Card key={booking.id}>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{booking.freelancerName}</h3>
-                          <Badge variant="secondary">{booking.service}</Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <CalendarDays className="h-4 w-4" />
-                            {new Date(booking.date).toLocaleDateString('pt-BR')}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {booking.location}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-primary text-primary" />
-                          <span className="text-sm">{booking.rating}</span>
-                        </div>
-                        <Badge variant="outline">Concluído</Badge>
-                      </div>
-                    </div>
+              {pastBookings.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    Nenhum trabalho concluído ainda
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                pastBookings.map((booking) => (
+                  <Card key={booking.id}>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold">{booking.freelancer.full_name}</h3>
+                            <Badge variant="secondary">{booking.offer.specialty}</Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <CalendarDays className="h-4 w-4" />
+                              {new Date(booking.event_date).toLocaleDateString('pt-BR')}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {booking.location}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {booking.status === 'completed' ? 'Concluído' : 'Cancelado'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </TabsContent>
 
             <TabsContent value="favorites" className="space-y-4">
-              {favoriteFreelancers.map((freelancer) => (
-                <Card key={freelancer.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{freelancer.name}</h3>
-                          <Badge variant="secondary">{freelancer.specialty}</Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-primary text-primary" />
-                            {freelancer.rating}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {freelancer.location}
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Ver Perfil
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  <p>Sistema de favoritos será implementado em breve</p>
+                  <p className="text-sm mt-2">Em desenvolvimento...</p>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
 

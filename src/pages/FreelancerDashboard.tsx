@@ -11,6 +11,7 @@ import ReferralSection from '@/components/referrals/ReferralSection';
 import { EarningsSummary } from '@/components/freelancer/EarningsSummary';
 import { ReceivablesManager } from '@/components/freelancer/ReceivablesManager';
 import { AvailabilityCalendar } from '@/components/freelancer/AvailabilityCalendar';
+import { PlatformOffersManager } from '@/components/offers/PlatformOffersManager';
 import { User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
@@ -90,17 +91,7 @@ const FreelancerDashboard: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="offers" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ofertas da Plataforma</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Esta seção mostrará as ofertas recebidas através da plataforma.</p>
-                    <p className="text-sm mt-2">Funcionalidade em desenvolvimento.</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <PlatformOffersManager />
             </TabsContent>
           </Tabs>
 
