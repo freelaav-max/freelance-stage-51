@@ -158,6 +158,90 @@ export type Database = {
           },
         ]
       }
+      external_receivables: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string
+          due_date: string | null
+          freelancer_id: string
+          id: string
+          notes: string | null
+          service_date: string
+          service_title: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string
+          due_date?: string | null
+          freelancer_id: string
+          id?: string
+          notes?: string | null
+          service_date: string
+          service_title: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string
+          due_date?: string | null
+          freelancer_id?: string
+          id?: string
+          notes?: string | null
+          service_date?: string
+          service_title?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      freelancer_calendar_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_datetime: string
+          freelancer_id: string
+          id: string
+          location: string | null
+          reference_id: string | null
+          start_datetime: string
+          title: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_datetime: string
+          freelancer_id: string
+          id?: string
+          location?: string | null
+          reference_id?: string | null
+          start_datetime: string
+          title?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_datetime?: string
+          freelancer_id?: string
+          id?: string
+          location?: string | null
+          reference_id?: string | null
+          start_datetime?: string
+          title?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       freelancer_profiles: {
         Row: {
           bio: string | null
@@ -683,6 +767,54 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_calendar_event: {
+        Args: {
+          p_description?: string
+          p_end_datetime: string
+          p_location?: string
+          p_start_datetime: string
+          p_title?: string
+          p_type: string
+        }
+        Returns: string
+      }
+      create_external_receivable: {
+        Args: {
+          p_amount: number
+          p_client_name: string
+          p_due_date?: string
+          p_notes?: string
+          p_service_date: string
+          p_service_title: string
+        }
+        Returns: string
+      }
+      get_freelancer_availability: {
+        Args: {
+          p_end_date: string
+          p_freelancer_id: string
+          p_start_date: string
+        }
+        Returns: {
+          description: string
+          end_datetime: string
+          id: string
+          location: string
+          start_datetime: string
+          title: string
+          type: string
+        }[]
+      }
+      get_freelancer_receivables_summary: {
+        Args: { p_freelancer_id: string }
+        Returns: {
+          external_pending: number
+          platform_pending: number
+          total_overdue: number
+          total_pending: number
+          total_received: number
+        }[]
+      }
       get_or_create_referral_code: {
         Args: { p_user_id: string }
         Returns: {
@@ -726,6 +858,10 @@ export type Database = {
           referral_code_id: string
           referrer_id: string
         }[]
+      }
+      update_external_receivable_status: {
+        Args: { p_receivable_id: string; p_status: string }
+        Returns: boolean
       }
     }
     Enums: {
