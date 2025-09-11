@@ -48,14 +48,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
 
       if (error) throw error;
 
-      // Update freelancer's average rating
-      const { error: updateError } = await supabase.rpc('update_freelancer_rating', {
-        freelancer_id: receiverId,
-      });
-
-      if (updateError) {
-        console.warn('Failed to update freelancer rating:', updateError);
-      }
+      // Note: Freelancer rating will be updated after Supabase types are regenerated
 
       toast({
         title: "Avaliação enviada!",
