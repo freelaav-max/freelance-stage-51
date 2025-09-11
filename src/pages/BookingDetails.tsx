@@ -1,370 +1,392 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { useAuthRequired } from '@/hooks/useAuthRequired';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
+import { ReviewDisplay } from '@/components/reviews/ReviewDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { StatusBadge } from '@/components/StatusBadge';
+import { PaymentDisclaimer } from '@/components/PaymentDisclaimer';
 import {
-  CalendarDays,
-  Clock,
+  Calendar,
   MapPin,
   DollarSign,
-  FileText,
+  User,
   MessageSquare,
   Star,
-  Download,
-  AlertTriangle,
   CheckCircle,
-  Phone,
-  Mail
+  Clock
 } from 'lucide-react';
+
+interface BookingDetails {
+  id: string;
+  status: 'confirmed' | 'completed' | 'cancelled' | 'in_progress';
+  total_amount: number;
+  deposit_amount: number;
+  location: string;
+  event_date: string;
+  completed_at?: string;
+  created_at: string;
+  offer: {
+    title: string;
+    description: string;
+    specialty: string;
+    event_time?: string;
+  };
+  freelancer: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+  client: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+}
 
 const BookingDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { loading } = useAuthRequired();
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [booking, setBooking] = useState<BookingDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [existingReview, setExistingReview] = useState(null);
+  
+  useEffect(() => {
+    if (!id || !user) return;
+    fetchBookingDetails();
+  }, [id, user]);
+
+  const fetchBookingDetails = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          status,
+          total_amount,
+          deposit_amount,
+          location,
+          event_date,
+          completed_at,
+          created_at,
+          offer:offers(
+            title,
+            description,
+            specialty,
+            event_time
+          ),
+          freelancer:profiles!bookings_freelancer_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          client:profiles!bookings_client_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      // Check if user has permission to view this booking
+      if (data.freelancer.id !== user.id && data.client.id !== user.id) {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para ver este booking",
+          variant: "destructive",
+        });
+        navigate('/dashboard');
+        return;
+      }
+
+      setBooking(data);
+      
+      // Check for existing review
+      if (data.status === 'completed') {
+        const { data: review } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('booking_id', id)
+          .eq('giver_id', user.id)
+          .single();
+          
+        setExistingReview(review);
+      }
+    } catch (error) {
+      console.error('Error fetching booking:', error);
+      toast({
+        title: "Erro ao carregar booking",
+        description: "Não foi possível carregar os detalhes",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    if (!booking || booking.status !== 'confirmed') return;
+
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', booking.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking marcado como concluído",
+        description: "Agora você pode avaliar o serviço prestado",
+      });
+
+      fetchBookingDetails();
+    } catch (error) {
+      console.error('Error completing booking:', error);
+      toast({
+        title: "Erro ao completar booking",
+        description: "Tente novamente em alguns instantes",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <LoadingSpinner />
+        </main>
+      </div>
+    );
   }
 
-  // Mock data - would come from API based on booking ID
-  const booking = {
-    id: id || '1',
-    clientName: 'Maria Santos',
-    clientEmail: 'maria@empresa.com',
-    clientPhone: '(11) 99999-9999',
-    freelancerName: 'Carlos Silva',
-    freelancerEmail: 'carlos@freelancer.com',
-    freelancerPhone: '(11) 88888-8888',
-    service: 'Técnico de Som',
-    description: 'Evento corporativo para 200 pessoas com apresentações e networking.',
-    date: '2025-01-30',
-    time: '14:00',
-    duration: 8,
-    location: 'Centro de Convenções - São Paulo, SP',
-    address: 'Av. Paulista, 1000 - Bela Vista, São Paulo - SP',
-    totalAmount: 800,
-    depositAmount: 240, // 30%
-    remainingAmount: 560,
-    status: 'confirmed', // confirmed, in_progress, completed, cancelled
-    paymentStatus: 'deposit_paid', // pending, deposit_paid, fully_paid
-    contractUrl: '/contracts/booking_1.pdf',
-    createdAt: '2025-01-20',
-    eventRequirements: [
-      'Sistema de som para 200 pessoas',
-      'Microfones sem fio (2x)',
-      'Mesa de som digital',
-      'Caixas de retorno para palestrantes'
-    ],
-    notes: 'Cliente enfatizou a importância da qualidade do áudio para as apresentações.'
-  };
+  if (!booking) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">Booking não encontrado</p>
+              <Button onClick={() => navigate('/dashboard')} className="mt-4">
+                Voltar ao Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge className="bg-blue-500">Confirmado</Badge>;
-      case 'in_progress':
-        return <Badge className="bg-yellow-500">Em Andamento</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500">Concluído</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Cancelado</Badge>;
-      default:
-        return <Badge variant="secondary">Pendente</Badge>;
-    }
-  };
-
-  const getPaymentStatusBadge = (status: string) => {
-    switch (status) {
-      case 'fully_paid':
-        return <Badge className="bg-green-500">Pago Integralmente</Badge>;
-      case 'deposit_paid':
-        return <Badge className="bg-blue-500">Sinal Pago</Badge>;
-      case 'pending':
-        return <Badge variant="destructive">Pagamento Pendente</Badge>;
-      default:
-        return <Badge variant="secondary">Pendente</Badge>;
-    }
-  };
+  const isClient = user?.id === booking.client.id;
+  const isFreelancer = user?.id === booking.freelancer.id;
+  const canComplete = booking.status === 'confirmed' && isClient;
+  const canReview = booking.status === 'completed' && !existingReview;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <motion.div
-          ref={ref}
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <Button variant="outline" onClick={() => navigate(-1)} className="mb-4">
-                ← Voltar
-              </Button>
-              <h1 className="text-3xl font-bold mb-2">Detalhes do Booking</h1>
-              <p className="text-muted-foreground">Booking #{booking.id}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {getStatusBadge(booking.status)}
-              {getPaymentStatusBadge(booking.paymentStatus)}
-            </div>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              ← Voltar
+            </Button>
+            <h1 className="text-2xl font-bold">Detalhes do Booking</h1>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Event Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5" />
-                    Detalhes do Evento
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+          <div className="grid gap-6">
+            {/* Main Booking Info */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold mb-2">{booking.service}</h3>
-                    <p className="text-muted-foreground">{booking.description}</p>
+                    <CardTitle className="flex items-center gap-2">
+                      {booking.offer.title}
+                      <Badge variant="secondary">{booking.offer.specialty}</Badge>
+                    </CardTitle>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                      <span>{new Date(booking.date).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{booking.time} ({booking.duration}h de duração)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{booking.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span>R$ {booking.totalAmount.toLocaleString('pt-BR')}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Endereço completo:</p>
-                    <p>{booking.address}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Requirements */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Requisitos do Evento</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {booking.eventRequirements.map((requirement, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                        <span>{requirement}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  {booking.notes && (
-                    <div className="mt-4 pt-4 border-t">
-                      <h4 className="font-semibold mb-2">Observações:</h4>
-                      <p className="text-muted-foreground">{booking.notes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Payment Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Detalhes de Pagamento
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                  <StatusBadge status={booking.status === 'confirmed' ? 'pending' : booking.status === 'completed' ? 'completed' : 'rejected'} />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <PaymentDisclaimer />
+                
+                <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Valor total:</span>
-                      <span className="font-semibold">R$ {booking.totalAmount.toLocaleString('pt-BR')}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span>Sinal (30%):</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">R$ {booking.depositAmount.toLocaleString('pt-BR')}</span>
-                        {booking.paymentStatus === 'deposit_paid' || booking.paymentStatus === 'fully_paid' ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Restante (70%):</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">R$ {booking.remainingAmount.toLocaleString('pt-BR')}</span>
-                        {booking.paymentStatus === 'fully_paid' ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    {booking.paymentStatus === 'deposit_paid' && (
-                      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-sm text-blue-700">
-                          O pagamento restante será liberado após a conclusão do evento.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Contact Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informações de Contato</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Cliente</h4>
-                    <div className="flex items-center gap-3 mb-2">
-                      <Avatar>
-                        <AvatarFallback>{booking.clientName.charAt(0)}</AvatarFallback>
-                      </Avatar>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">{booking.clientName}</p>
-                        <p className="text-sm text-muted-foreground">Cliente</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        <span>{booking.clientEmail}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{booking.clientPhone}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-semibold mb-2">Freelancer</h4>
-                    <div className="flex items-center gap-3 mb-2">
-                      <Avatar>
-                        <AvatarFallback>{booking.freelancerName.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{booking.freelancerName}</p>
-                        <p className="text-sm text-muted-foreground">Freelancer</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        <span>{booking.freelancerEmail}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{booking.freelancerPhone}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ações</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button className="w-full" variant="outline">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Enviar Mensagem
-                  </Button>
-                  
-                  <Button className="w-full" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar Contrato
-                  </Button>
-
-                  {booking.status === 'completed' && (
-                    <Button className="w-full">
-                      <Star className="h-4 w-4 mr-2" />
-                      Avaliar
-                    </Button>
-                  )}
-
-                  {booking.status === 'confirmed' && new Date(booking.date) > new Date() && (
-                    <Button className="w-full" variant="destructive">
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Cancelar Booking
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Timeline */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Histórico</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm font-medium">Booking confirmado</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(booking.createdAt).toLocaleDateString('pt-BR')}
+                        <p className="font-medium">Data do Evento</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(booking.event_date).toLocaleDateString('pt-BR')}
+                          {booking.offer.event_time && ` às ${booking.offer.event_time}`}
                         </p>
                       </div>
                     </div>
-                    
-                    {booking.paymentStatus === 'deposit_paid' && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Local</p>
+                        <p className="text-sm text-muted-foreground">{booking.location}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Valor Total</p>
+                        <p className="text-sm text-muted-foreground">
+                          R$ {booking.total_amount.toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">
+                          {isClient ? 'Freelancer' : 'Cliente'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {isClient ? booking.freelancer.full_name : booking.client.full_name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Criado em</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(booking.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {booking.completed_at && (
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
                         <div>
-                          <p className="text-sm font-medium">Sinal pago</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date().toLocaleDateString('pt-BR')}
+                          <p className="font-medium">Concluído em</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(booking.completed_at).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
                       </div>
                     )}
                   </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-medium mb-2">Descrição do Serviço</h3>
+                  <p className="text-sm text-muted-foreground">{booking.offer.description}</p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/messages`)}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Chat
+                  </Button>
+
+                  {canComplete && (
+                    <Button
+                      onClick={handleCompleteBooking}
+                      className="flex items-center gap-2"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Marcar como Concluído
+                    </Button>
+                  )}
+
+                  {canReview && (
+                    <Button
+                      onClick={() => setShowReviewForm(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Star className="h-4 w-4" />
+                      Avaliar Serviço
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Review Section */}
+            {booking.status === 'completed' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Avaliação</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {existingReview ? (
+                    <ReviewDisplay reviews={[existingReview]} />
+                  ) : showReviewForm ? (
+                    <ReviewForm
+                      bookingId={booking.id}
+                      receiverId={isClient ? booking.freelancer.id : booking.client.id}
+                      receiverName={isClient ? booking.freelancer.full_name : booking.client.full_name}
+                      onSuccess={() => {
+                        setShowReviewForm(false);
+                        fetchBookingDetails();
+                      }}
+                      onCancel={() => setShowReviewForm(false)}
+                    />
+                  ) : canReview ? (
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground mb-4">
+                        Que tal avaliar o serviço prestado?
+                      </p>
+                      <Button onClick={() => setShowReviewForm(true)}>
+                        Deixar Avaliação
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      Nenhuma avaliação ainda
+                    </p>
+                  )}
                 </CardContent>
               </Card>
-            </div>
+            )}
           </div>
-        </motion.div>
+        </div>
       </main>
 
       <Footer />

@@ -1,258 +1,377 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SearchFilters as ISearchFilters } from '@/hooks/useFreelancerSearch';
-import { SPECIALTIES } from '@/lib/freelancer';
-import { Calendar as CalendarIcon, X } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { SearchDatePicker } from '@/components/SearchDatePicker';
+import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { 
+  MapPin, 
+  Calendar, 
+  DollarSign, 
+  Filter, 
+  ChevronDown, 
+  X,
+  Star 
+} from 'lucide-react';
 
 interface SearchFiltersProps {
-  filters: ISearchFilters;
-  onFiltersChange: (filters: ISearchFilters) => void;
+  onFiltersChange: (filters: SearchFilters) => void;
+  filters?: SearchFilters;
+  className?: string;
 }
 
-const BRAZILIAN_CITIES = [
-  'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Brasília', 
-  'Fortaleza', 'Curitiba', 'Recife', 'Porto Alegre', 'Manaus',
-  'Belém', 'Goiânia', 'Guarulhos', 'Campinas', 'São Luís',
-  'São Gonçalo', 'Maceió', 'Duque de Caxias', 'Natal', 'Teresina'
+export interface SearchFilters {
+  location?: {
+    city?: string;
+    state?: string;
+    radius?: number;
+  };
+  specialties?: string[];
+  availableDate?: string; // Changed from Date to string to match existing interface
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+  rating?: number;
+  experience?: number;
+  equipment?: string[];
+  availability?: 'available' | 'busy' | 'any';
+}
+
+const SPECIALTIES = [
+  'Audiovisual',
+  'Vídeo',
+  'Áudio',
+  'Fotografia',
+  'Iluminação',
+  'Streaming',
+  'Edição',
+  'Motion Graphics'
+];
+
+const EQUIPMENT_OPTIONS = [
+  'Câmeras Profissionais',
+  'Drones',
+  'Iluminação LED',
+  'Microfones Lapela',
+  'Equipamentos de Som',
+  'Teleprompter',
+  'Steadicam',
+  'Lentes Prime'
 ];
 
 const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
-  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
-  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 
+  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 
+  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
-const SearchFilters = ({ filters, onFiltersChange }: SearchFiltersProps) => {
-  const [localFilters, setLocalFilters] = useState<ISearchFilters>(filters);
-  const [priceRange, setPriceRange] = useState([
-    filters.minPrice || 0, 
-    filters.maxPrice || 1000
-  ]);
+export const SearchFilters: React.FC<SearchFiltersProps> = ({ 
+  onFiltersChange, 
+  className = '' 
+}) => {
+  const [filters, setFilters] = useState<SearchFilters>({
+    priceRange: { min: 0, max: 10000 },
+    rating: 0,
+    experience: 0,
+    availability: 'any'
+  });
+  
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    setLocalFilters(filters);
-    setPriceRange([filters.minPrice || 0, filters.maxPrice || 1000]);
-  }, [filters]);
+  const updateFilters = (newFilters: Partial<SearchFilters>) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    onFiltersChange(updatedFilters);
+  };
 
-  const handleSpecialtyChange = (specialty: string, checked: boolean) => {
-    const currentSpecialties = localFilters.specialties || [];
+  const addActiveFilter = (filterName: string) => {
+    if (!activeFilters.includes(filterName)) {
+      setActiveFilters([...activeFilters, filterName]);
+    }
+  };
+
+  const removeActiveFilter = (filterName: string) => {
+    setActiveFilters(activeFilters.filter(f => f !== filterName));
+    
+    // Reset the corresponding filter
+    switch (filterName) {
+      case 'location':
+        updateFilters({ location: undefined });
+        break;
+      case 'specialties':
+        updateFilters({ specialties: [] });
+        break;
+      case 'date':
+        updateFilters({ availableDate: undefined });
+        break;
+      case 'price':
+        updateFilters({ priceRange: { min: 0, max: 10000 } });
+        break;
+      case 'rating':
+        updateFilters({ rating: 0 });
+        break;
+      case 'experience':
+        updateFilters({ experience: 0 });
+        break;
+      case 'equipment':
+        updateFilters({ equipment: [] });
+        break;
+    }
+  };
+
+  const clearAllFilters = () => {
+    const clearedFilters: SearchFilters = {
+      priceRange: { min: 0, max: 10000 },
+      rating: 0,
+      experience: 0,
+      availability: 'any'
+    };
+    setFilters(clearedFilters);
+    setActiveFilters([]);
+    onFiltersChange(clearedFilters);
+  };
+
+  const handleLocationChange = (field: 'city' | 'state' | 'radius', value: string | number) => {
+    const newLocation = { ...filters.location, [field]: value };
+    updateFilters({ location: newLocation });
+    addActiveFilter('location');
+  };
+
+  const handleSpecialtyToggle = (specialty: string, checked: boolean) => {
+    const currentSpecialties = filters.specialties || [];
     const newSpecialties = checked 
       ? [...currentSpecialties, specialty]
       : currentSpecialties.filter(s => s !== specialty);
     
-    setLocalFilters(prev => ({
-      ...prev,
-      specialties: newSpecialties
-    }));
+    updateFilters({ specialties: newSpecialties });
+    if (newSpecialties.length > 0) {
+      addActiveFilter('specialties');
+    } else {
+      removeActiveFilter('specialties');
+    }
   };
 
-  const handlePriceRangeChange = (value: number[]) => {
-    setPriceRange(value);
-    setLocalFilters(prev => ({
-      ...prev,
-      minPrice: value[0],
-      maxPrice: value[1]
-    }));
+  const handleEquipmentToggle = (equipment: string, checked: boolean) => {
+    const currentEquipment = filters.equipment || [];
+    const newEquipment = checked 
+      ? [...currentEquipment, equipment]
+      : currentEquipment.filter(e => e !== equipment);
+    
+    updateFilters({ equipment: newEquipment });
+    if (newEquipment.length > 0) {
+      addActiveFilter('equipment');
+    } else {
+      removeActiveFilter('equipment');
+    }
   };
-
-  const handleDateSelect = (date: Date | undefined) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      availableDate: date ? date.toISOString().split('T')[0] : undefined
-    }));
-  };
-
-  const applyFilters = () => {
-    onFiltersChange(localFilters);
-  };
-
-  const clearFilters = () => {
-    const emptyFilters: ISearchFilters = {};
-    setLocalFilters(emptyFilters);
-    setPriceRange([0, 1000]);
-    onFiltersChange(emptyFilters);
-  };
-
-  const selectedDate = localFilters.availableDate ? new Date(localFilters.availableDate) : undefined;
 
   return (
-    <div className="space-y-6 p-4">
-      {/* Especialidades */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Especialidades</Label>
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {SPECIALTIES.map((specialty) => (
-            <div key={specialty.value} className="flex items-center space-x-2">
-              <Checkbox
-                id={specialty.value}
-                checked={localFilters.specialties?.includes(specialty.value) || false}
-                onCheckedChange={(checked) => 
-                  handleSpecialtyChange(specialty.value, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={specialty.value}
-                className="text-sm font-normal cursor-pointer"
-              >
-                {specialty.label}
-              </Label>
-            </div>
-          ))}
+    <Card className={className}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtros de Busca
+          </CardTitle>
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </Collapsible>
         </div>
-      </div>
-
-      {/* Localização */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Localização</Label>
-        <div className="space-y-2">
-          <Select 
-            value={localFilters.city || ''} 
-            onValueChange={(value) => setLocalFilters(prev => ({ ...prev, city: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecionar cidade" />
-            </SelectTrigger>
-            <SelectContent>
-              {BRAZILIAN_CITIES.map((city) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select 
-            value={localFilters.state || ''} 
-            onValueChange={(value) => setLocalFilters(prev => ({ ...prev, state: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              {BRAZILIAN_STATES.map((state) => (
-                <SelectItem key={state} value={state}>
-                  {state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Faixa de Preço */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">
-          Faixa de Preço por Hora (R$ {priceRange[0]} - R$ {priceRange[1]})
-        </Label>
-        <Slider
-          value={priceRange}
-          onValueChange={handlePriceRangeChange}
-          max={1000}
-          min={0}
-          step={50}
-          className="w-full"
-        />
-        <div className="flex gap-2">
-          <Input
-            type="number"
-            placeholder="Mín"
-            value={priceRange[0]}
-            onChange={(e) => handlePriceRangeChange([Number(e.target.value), priceRange[1]])}
-            className="w-24"
-          />
-          <Input
-            type="number"
-            placeholder="Máx"
-            value={priceRange[1]}
-            onChange={(e) => handlePriceRangeChange([priceRange[0], Number(e.target.value)])}
-            className="w-24"
-          />
-        </div>
-      </div>
-
-      {/* Avaliação Mínima */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Avaliação Mínima</Label>
-        <Select 
-          value={localFilters.minRating?.toString() || ''} 
-          onValueChange={(value) => setLocalFilters(prev => ({ 
-            ...prev, 
-            minRating: value ? Number(value) : undefined 
-          }))}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Qualquer avaliação" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="4">4+ estrelas</SelectItem>
-            <SelectItem value="4.5">4.5+ estrelas</SelectItem>
-            <SelectItem value="5">5 estrelas</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Data de Disponibilidade */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Data de Disponibilidade</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !selectedDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? (
-                format(selectedDate, "PPP", { locale: ptBR })
-              ) : (
-                <span>Selecionar data</span>
-              )}
-              {selectedDate && (
+        
+        {/* Active Filters */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {activeFilters.map(filter => (
+              <Badge key={filter} variant="secondary" className="flex items-center gap-1">
+                {filter}
                 <X 
-                  className="ml-auto h-4 w-4 hover:text-destructive" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDateSelect(undefined);
-                  }}
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => removeActiveFilter(filter)}
                 />
-              )}
+              </Badge>
+            ))}
+            <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+              Limpar Todos
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelect}
-              disabled={(date) => date < new Date()}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+          </div>
+        )}
+      </CardHeader>
+      
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleContent>
+          <CardContent className="space-y-6">
+            
+            {/* Location Filters */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 font-medium">
+                <MapPin className="h-4 w-4" />
+                Localização
+              </Label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Input
+                  placeholder="Cidade"
+                  value={filters.location?.city || ''}
+                  onChange={(e) => handleLocationChange('city', e.target.value)}
+                />
+                
+                <Select
+                  value={filters.location?.state || ''}
+                  onValueChange={(value) => handleLocationChange('state', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BRAZILIAN_STATES.map(state => (
+                      <SelectItem key={state} value={state}>{state}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm">Raio: {filters.location?.radius || 0} km</Label>
+                  <Slider
+                    value={[filters.location?.radius || 0]}
+                    onValueChange={([value]) => handleLocationChange('radius', value)}
+                    max={200}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
 
-      {/* Botões de Ação */}
-      <div className="space-y-2 pt-4 border-t">
-        <Button onClick={applyFilters} variant="premium" className="w-full">
-          Aplicar Filtros
-        </Button>
-        <Button onClick={clearFilters} variant="outline" className="w-full">
-          Limpar Filtros
-        </Button>
-      </div>
-    </div>
+            {/* Specialties */}
+            <div className="space-y-3">
+              <Label className="font-medium">Especialidades</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {SPECIALTIES.map(specialty => (
+                  <div key={specialty} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={specialty}
+                      checked={filters.specialties?.includes(specialty) || false}
+                      onCheckedChange={(checked) => 
+                        handleSpecialtyToggle(specialty, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={specialty} className="text-sm">{specialty}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Availability */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 font-medium">
+                <Calendar className="h-4 w-4" />
+                Disponível em
+              </Label>
+              <SearchDatePicker
+                date={filters.availableDate ? new Date(filters.availableDate) : undefined}
+                onDateChange={(date) => {
+                  updateFilters({ availableDate: date?.toISOString().split('T')[0] });
+                  if (date) addActiveFilter('date');
+                  else removeActiveFilter('date');
+                }}
+                placeholder="Selecionar data"
+              />
+            </div>
+
+            {/* Price Range */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 font-medium">
+                <DollarSign className="h-4 w-4" />
+                Faixa de Preço (R$ {filters.priceRange?.min} - R$ {filters.priceRange?.max})
+              </Label>
+              <Slider
+                value={[filters.priceRange?.min || 0, filters.priceRange?.max || 10000]}
+                onValueChange={([min, max]) => {
+                  updateFilters({ priceRange: { min, max } });
+                  addActiveFilter('price');
+                }}
+                max={10000}
+                step={100}
+                className="w-full"
+              />
+            </div>
+
+            {/* Rating */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 font-medium">
+                <Star className="h-4 w-4" />
+                Avaliação Mínima
+              </Label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <Button
+                    key={rating}
+                    variant={filters.rating === rating ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      updateFilters({ rating });
+                      if (rating > 0) addActiveFilter('rating');
+                      else removeActiveFilter('rating');
+                    }}
+                  >
+                    {rating}★
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Experience */}
+            <div className="space-y-3">
+              <Label className="font-medium">
+                Experiência Mínima: {filters.experience} anos
+              </Label>
+              <Slider
+                value={[filters.experience || 0]}
+                onValueChange={([value]) => {
+                  updateFilters({ experience: value });
+                  if (value > 0) addActiveFilter('experience');
+                  else removeActiveFilter('experience');
+                }}
+                max={20}
+                step={1}
+                className="w-full"
+              />
+            </div>
+
+            {/* Equipment */}
+            <div className="space-y-3">
+              <Label className="font-medium">Equipamentos</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {EQUIPMENT_OPTIONS.map(equipment => (
+                  <div key={equipment} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={equipment}
+                      checked={filters.equipment?.includes(equipment) || false}
+                      onCheckedChange={(checked) => 
+                        handleEquipmentToggle(equipment, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={equipment} className="text-sm">{equipment}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 };
 
